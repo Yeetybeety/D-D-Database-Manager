@@ -1,6 +1,6 @@
 # Project Tasks
 
-## Frontend (Harold)
+## Frontend (Harold/Marcus)
 
 ### Character Creation and Management Frame (July 28)
 - Character generation (maybe an image)
@@ -20,7 +20,7 @@
 
 ### Dice Roller (August 1)
 
-## Backend (Marshall)
+## Backend (Marshall/Marcus)
 
 ### Player Management System (July 28)
 - Ability to add players (at start of campaign)
