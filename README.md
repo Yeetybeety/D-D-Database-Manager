@@ -8,7 +8,7 @@
 - Page to view all items in inventory plus equipped items
 - Should be tied to inventory management
 
-### Campaign Generation Frame (July 30)
+### Campaign Generation Frame (July 29)
 - Options to name campaign, length of campaign, participants, difficulty level, etc.
 
 ### Inventory Management Frame (July 31)
