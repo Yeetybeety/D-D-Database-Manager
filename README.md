@@ -65,3 +65,6 @@
 - Defense and evasion mechanics
 - Dice roll simulations
 - Status effects calculations
+
+### Quick Summary 
+Our project specifically addresses the dynamic changes of information and events within a campaign, and the process of recording them. For example, when a group of players ‘encounters’ and defeats a Monster, we can record this event in the EventLog. As a result of the encounter, players might receive a new item as a reward. This will be shown in the database through a ‘Has’ relationship with the Player, and the characteristics of the item will be stored as well.
