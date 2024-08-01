@@ -6,7 +6,9 @@ import MainContent from './components/MainContent';
 import CampaignManagement from './components/CampaignManagement';
 import CharacterCreation from './components/CharacterCreation';
 import Quests from './components/routes/Quests';
-import Players from './components/routes/Players';
+import PlayerPage from './components/PlayerManagementSystem/PlayerPage';
+import PlayerForm from './components/PlayerManagementSystem/PlayerForm';
+import PlayerDetails from './components/PlayerManagementSystem/PlayerCard';
 import NPC from './components/routes/NPC';
 import Items from './components/routes/Items';
 import EventLogs from './components/routes/EventLog';
@@ -28,7 +30,10 @@ const App = () => {
           <Route path="/" element={<MainContent campaigns={campaigns} onCreateCampaign={handleCreateCampaign} />} />
           {/* Routes */}
           <Route path="/quests" element={<Quests />} />
-          <Route path="/players" element={<Players />} />
+          <Route path="/players" element={<PlayerPage />} />
+          <Route path="/player/new" element={<PlayerForm />} />
+          <Route path="/player/:id" element={<PlayerDetails />} />
+          <Route path="/player/edit/:id" element={<PlayerForm />} />
           <Route path="/npc" element={<NPC />} />
           <Route path="/items" element={<Items />} />
           <Route path="/event-logs" element={<EventLogs />} />
