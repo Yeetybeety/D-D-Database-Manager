@@ -30,7 +30,7 @@ const EntityCreation = ({ name, fields, onCreateEntity, onClose }) => {
  // If the value associated with the key is 'null', then it is a text input
  // else, the value will be a list of the selection options
  return (
-   <div>
+   <div className='max-h-[600px] overflow-y-auto'>
      <h2 className="text-2xl font-bold mb-4">Create {name}</h2>
      <form onSubmit={handleSubmit}>
        {Object.entries(fields).map(([label, options], index) => {

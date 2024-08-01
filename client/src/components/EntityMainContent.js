@@ -5,11 +5,16 @@ import EntityCreation from './CreateEntity';
 import Modal from './Modal';
 import EntityDisplay from './EntityDisplay';
 
-const EntityMainContent = ({ entity, entities, onCreateEntity, fields }) => {
+const EntityMainContent = ({ entity, entities, onCreateEntity, fields, onDeleteEntity, onEditEntity }) => {
     const [showModal, setShowModal] = useState(false);
 
     const handleCreateEntity = (newEntity) => {
         onCreateEntity(newEntity);
+        setShowModal(false);
+    };
+
+    const handleEditEntity = (newEntity) => {
+        onEditEntity(newEntity);
         setShowModal(false);
     };
 
@@ -23,7 +28,7 @@ const EntityMainContent = ({ entity, entities, onCreateEntity, fields }) => {
                         {entities.length > 0 ? (
                             entities.map((entityData, index) => (
                                 <div key={index} className="mb-4">
-                                    <EntityDisplay entityData={entityData} fields={fields} />
+                                    <EntityDisplay entityData={entityData} onEdit={handleEditEntity} fields={fields} onDelete={onDeleteEntity} />
                                 </div>
                             ))
                         ) : (
@@ -41,6 +46,7 @@ const EntityMainContent = ({ entity, entities, onCreateEntity, fields }) => {
                 </Modal>
                 {/* This code below renders the buttons for you to manage each entity you have created */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    {/* Proposing we give each entity a field called 'Title' so we know which one the 'Manage' button refers to */}
                     {entities?.map((entityObject, index) => (
                         <EntityButton route={entity} key={index} entityNumber={index + 1} name={entityObject.Title} />
                     ))}
