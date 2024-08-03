@@ -2,6 +2,7 @@ const express = require('express');
 const mysql = require('mysql2/promise'); // Use the promise-based version
 const app = express();
 const port = 3001;
+// const PlayerRoutes = require('./routes/PlayerRoutes');
 
 require('dotenv').config();
 
@@ -25,7 +26,6 @@ app.get('/', (req, res) => {
   res.send('Hello from the backend!');
 });
 
-
 // Get Players
 app.get('/api/players', async (req, res) => {
   try {
@@ -34,20 +34,6 @@ app.get('/api/players', async (req, res) => {
   } catch (err) {
     console.error('Error:', err);
     res.status(500).json({ error: 'An error occurred while trying to fetch players.' });
-  }
-});
-
-// Delete Player
-app.delete('/api/players/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    await pool.query('DELETE FROM Player WHERE PlayerID = ?', [id]);
-    console.log(`Player with ID ${id} deleted from the database.`);
-    // send a response with status code 204 (No Content)
-    res.status(204).end();
-  } catch (err) {
-    console.error('Error:', err);
-    res.status(500).json({ error: 'An error occurred while trying to delete the player.' });
   }
 });
 
@@ -101,6 +87,20 @@ app.post('/api/players', async (req, res) => {
 
 });
 
+// Delete Player
+app.delete('/api/players/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM Player WHERE PlayerID = ?', [id]);
+    console.log(`Player with ID ${id} deleted from the database.`);
+    // send a response with status code 204 (No Content)
+    res.status(204).end();
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to delete the player.' });
+  }
+});
+
 // Edit Player
 app.put('/api/players/:id', async (req, res) => {
   console.log('Received Edit Request:', req.body);
@@ -148,6 +148,108 @@ app.put('/api/players/:id', async (req, res) => {
     await pool.query('ROLLBACK');
     console.error('Error:', err);
     res.status(500).json({ error: 'An error occurred while trying to update the player.' });
+  }
+});
+
+// Get player details
+app.get('/api/players/:id', async (req, res) => {
+  const playerId = req.params.id;
+  try {
+
+    // fetch basic player info
+    const playerQuery = 'SELECT * FROM Player WHERE PlayerID = ?';
+    const [playerRows] = await pool.query(playerQuery, [playerId]);
+
+    // player not found
+    if (playerRows.length === 0) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+
+    const player = playerRows[0];
+
+    // fetch player stats
+    const statsQuery = 'SELECT StatName, StatValue FROM PlayerStat WHERE PlayerID = ?';
+    const [statsRows] = await pool.query(statsQuery, [playerId]);
+
+    // combine stats into player object
+    player.stats = {};
+    statsRows.forEach(stat => {
+      player.stats[stat.StatName] = stat.StatValue;
+    });
+
+    console.log('Player details:', player);
+
+    // send response as a json object
+    res.json(player);
+
+  } catch (error) {
+    // err handling
+    console.error('Error fetching player details:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// // Update player notes
+// app.put('/api/players/:id/details', async (req, res) => {
+  
+//   const playerId = req.params.id;
+//   const { Notes, stats } = req.body;
+
+//   try {
+//     await pool.query('START TRANSACTION');
+
+//     // update notes query
+//     const notesQuery = 'UPDATE Player SET Notes = ? WHERE PlayerID = ?';
+//     await pool.query(notesQuery, [Notes, playerId]);
+//     res.json({ message: 'Notes updated successfully' });
+
+//     // update player stats
+//     const statsQuery = 'UPDATE PlayerStat'
+//   } catch (error) {
+//     // error handling
+//     console.error('Error updating player notes:', error);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// });
+
+
+app.put('/api/players/:id/details', async (req, res) => {
+  
+  console.log('Received Edit Request:', req.body);
+  
+  const playerId = req.params.id;
+  const { Notes, stats } = req.body;
+
+  try {
+    await pool.query('START TRANSACTION');
+
+    // Update notes
+    if (Notes !== undefined) {
+      const notesQuery = 'UPDATE Player SET Notes = ? WHERE PlayerID = ?';
+      await pool.query(notesQuery, [Notes, playerId]);
+    }
+
+    // Update stats
+    if (stats && Object.keys(stats).length > 0) {
+      const updatePromises = Object.entries(stats).map(async ([statName, statValue]) => {
+        const updateStatQuery = `
+          INSERT INTO PlayerStat (PlayerID, StatName, StatValue) 
+          VALUES (?, ?, ?) 
+          ON DUPLICATE KEY UPDATE StatValue = ?
+        `;
+        await pool.query(updateStatQuery, [playerId, statName, statValue, statValue]);
+      });
+
+      await Promise.all(updatePromises);
+    }
+
+    await pool.query('COMMIT');
+    console.log(`Player details updated successfully for player ${playerId}`);
+    res.json({ message: 'Player details updated successfully' });
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('Error updating player details:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
