@@ -1,16 +1,17 @@
 {
-  "name": "my-app",
-  "version": "0.1.0",
-  "private": true,
   "name": "node_demo_project",
   "version": "1.0.0",
+  "private": true,
   "description": "The sample Node.js project for CPSC304.",
   "main": "server.js",
   "keywords": [],
   "author": "Zoe Yuan",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.17.3",
-    "oracledb": "^5.2.0"
+    "mysql": "^2.18.1",
+    "mysql2": "^3.11.0",
+    "oracledb": "https://github.com/oracle/node-oracledb/releases/download/v6.0.0/oracledb-src-6.0.0.tgz"
   }
 }

@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import React from 'react';
 import EntityMainContent from '../EntityMainContent';
 
-const Equipment = () => {
-    const [equipments, setEquipments] = useState([]);
+const Equipment = ({ entities, createEquipment, deleteEquipment, editEquipment }) => {
+    
+    const equipments = entities
 
     const handleCreateEquipment = (newEquipment) => {
-        setEquipments([...equipments, { ...newEquipment }]);
+        console.log(newEquipment);
+        createEquipment('equipment', newEquipment);
     };
 
+    const handleEditEquipment = (updatedEquipment) => {
+        editEquipment('equipment', updatedEquipment);
+    };
+
+    const handleDeleteEquipment = (equipmentId) => {
+        deleteEquipment('equipment', equipmentId);
+    };
+
+    // Pass in fields so the 'Create' component knows which input fields to render
     const fields = {
-        'Item Name': null,
-        'Item ID': null,
+        'ItemID': null,
         'Durability': null,
     };
 
@@ -21,6 +31,8 @@ const Equipment = () => {
                 fields={fields} 
                 entities={equipments} 
                 onCreateEntity={handleCreateEquipment} 
+                onDeleteEntity={handleDeleteEquipment} 
+                onEditEntity={handleEditEquipment} 
             />
         </div>
     );
