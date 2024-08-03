@@ -18,7 +18,7 @@ const NPC = ({ entities, createNPC, deleteNPC, editNPC }) => {
 
     // Define fields for NPC with specific selection options
     const fields = {
-        'NPCID': null, // Primary key, generally not editable by users
+        'NPC2ID': null, // Primary key, generally not editable by users
         'NPCName': null,
         'Description': null,
         'Race': ['Goblin', 'Juggernaut', 'Dwarf', 'Elf'], // Dropdown selection options

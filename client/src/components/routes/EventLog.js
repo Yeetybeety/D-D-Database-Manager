@@ -18,7 +18,7 @@ const EventLogs = ({ entities, createEventLog, deleteEventLog, editEventLog }) =
 
     // Pass in fields so the 'Create' component knows which input fields to render
     const fields = {
-        'EventID': null,
+        'EventLogID': null,
         'Description': null,
         'PlayerAction': null,
         'CampaignID': null,
