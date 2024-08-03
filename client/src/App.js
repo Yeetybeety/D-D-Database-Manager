@@ -8,7 +8,7 @@ import CharacterCreation from './components/CharacterCreation';
 import Quests from './components/routes/Quests';
 import PlayerPage from './components/PlayerManagementSystem/PlayerPage';
 import PlayerForm from './components/PlayerManagementSystem/PlayerForm';
-import PlayerDetails from './components/PlayerManagementSystem/PlayerCard';
+// import PlayerDetails from './components/PlayerManagementSystem/PlayerCard';
 import NPC from './components/routes/NPC';
 import Items from './components/routes/Items';
 import EventLogs from './components/routes/EventLog';
@@ -32,7 +32,7 @@ const App = () => {
           <Route path="/quests" element={<Quests />} />
           <Route path="/players" element={<PlayerPage />} />
           <Route path="/player/new" element={<PlayerForm />} />
-          <Route path="/player/:id" element={<PlayerDetails />} />
+          {/* <Route path="/player/:id" element={<PlayerDetails />} /> */}
           <Route path="/player/edit/:id" element={<PlayerForm />} />
           <Route path="/npc" element={<NPC />} />
           <Route path="/items" element={<Items />} />
