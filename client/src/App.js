@@ -15,7 +15,7 @@ import Items from './components/routes/Items';
 import EventLogs from './components/routes/EventLog';
 import Locations from './components/routes/Locations';
 import Equipment from './components/routes/Equipment';
-
+import Inventory from './components/routes/Inventory';
 
 const App = () => {
   const [campaigns, setCampaigns] = useState([]);
@@ -40,7 +40,7 @@ const App = () => {
           <Route path="/event-logs" element={<EventLogs />} />
           <Route path="/locations" element={<Locations />} />
           <Route path="/equipment" element={<Equipment />} />
-          <Route path="/inventory" component={<Inventory />} />
+          <Route path="/inventory" element={<Inventory />} />
           {/* Change the route below to go to an edit page? */}
           <Route path="/:route/:campaignNumber" element={<CampaignManagement campaigns={campaigns} />} />
           <Route path="/campaigns/:campaignNumber" element={<CampaignManagement campaigns={campaigns} />} />
