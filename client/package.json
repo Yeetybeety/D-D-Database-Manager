@@ -45,7 +45,3 @@
   },
   "proxy": "http://localhost:3001"
 }
-
-    "tailwindcss": "^3.4.7"
-  }
-}

@@ -13,6 +13,7 @@ const NPC = ({ entities, createNPC, deleteNPC, editNPC }) => {
     };
 
     const handleDeleteNPC = (npcId) => {
+        console.log(npcId);
         deleteNPC('NPC2', npcId);
     };
 
@@ -32,7 +33,7 @@ const NPC = ({ entities, createNPC, deleteNPC, editNPC }) => {
     return (
         <div>
             <EntityMainContent
-                entity="NPC"
+                entity="NPC2"
                 fields={fields}
                 entities={npcs}
                 onCreateEntity={handleCreateNPC}
