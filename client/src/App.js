@@ -6,12 +6,16 @@ import MainContent from './components/MainContent';
 import CampaignManagement from './components/CampaignManagement';
 import CharacterCreation from './components/CharacterCreation';
 import Quests from './components/routes/Quests';
-import Players from './components/routes/Players';
+import PlayerPage from './components/PlayerManagementSystem/PlayerPage';
+import PlayerForm from './components/PlayerManagementSystem/PlayerForm';
+// import PlayerDetails from './components/PlayerManagementSystem/PlayerCard';
+import PlayerDetails from './components/PlayerManagementSystem/PlayerDetails';
 import NPC from './components/routes/NPC';
 import Items from './components/routes/Items';
 import EventLogs from './components/routes/EventLog';
 import Locations from './components/routes/Locations';
 import Equipment from './components/routes/Equipment';
+
 
 const App = () => {
   const [campaigns, setCampaigns] = useState([]);
@@ -147,6 +151,11 @@ const App = () => {
         <Routes>
           <Route path="/" element={<MainContent campaigns={campaigns} onCreateCampaign={handleCreateCampaign} />} />
           {/* Routes */}
+          <Route path="/quests" element={<Quests />} />
+          <Route path="/players" element={<PlayerPage />} />
+          <Route path="/players/:id" element={<PlayerDetails />} />
+          <Route path="/player/edit/:id" element={<PlayerForm />} />
+          {/* Change the route below to go to an edit page? */}
           <Route path="/quest" element={<Quests entities={quests} createQuest={handleCreateEntity} editQuest={handleEditEntity} deleteQuest={handleDeleteEntity} />} />
           <Route path="/location" element={<Locations entities={locations} createLocation={handleCreateEntity} editLocation={handleEditEntity} deleteLocation={handleDeleteEntity} />} />
           <Route path="/item" element={<Items entities={items} createItem={handleCreateEntity} editItem={handleEditEntity} deleteItem={handleDeleteEntity} />} />
