@@ -18,8 +18,8 @@ const Items = ({ entities, createItem, deleteItem, editItem }) => {
 
     // Pass in fields so the 'Create' component knows which input fields to render
     const fields = {
-        'ItemName': null,
         'ItemID': null,
+        'ItemName': null,
         'Description': null,
         'Rarity': ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'],
         'ItemType': ['Weapon', 'Armor', 'Potion', 'Accessory'],
