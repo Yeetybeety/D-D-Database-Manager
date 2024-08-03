@@ -1,6 +1,6 @@
 // src/components/MainContent.js
 import React, { useState } from 'react';
-import EntityButton from './EntityButton';
+// import EntityButton from './EntityButton';
 import EntityCreation from './CreateEntity';
 import Modal from './Modal';
 import EntityDisplay from './EntityDisplay';

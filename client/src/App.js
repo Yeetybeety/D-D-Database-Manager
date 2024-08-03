@@ -18,8 +18,13 @@ const App = () => {
   const [quests, setQuests] = useState([]);
   const [locations, setLocations] = useState([]);
   const [items, setItems] = useState([]);
+  const [npcs, setNpcs] = useState([]);
+  const [eventLogs, setEventLogs] = useState([]);
+  const [equipment, setEquipment] = useState([]);
 
-  const entityList = ['quest', 'location', 'item'];
+
+  const entityList = ['quest', 'location', 'item', 'NPC2', 'eventLog', 'equipment'];
+
 
   const handleCreateCampaign = (newCampaign) => {
     setCampaigns([...campaigns, { ...newCampaign, participants: [] }]);
@@ -118,11 +123,21 @@ const App = () => {
       case 'item':
         setItems(await fetchEntities('item'));
         break;
+      case 'NPC2':
+        setNpcs(await fetchEntities('NPC2'));
+        break;
+      case 'eventLog':
+        setEventLogs(await fetchEntities('eventLog'));
+        break;
+      case 'equipment':
+        setEquipment(await fetchEntities('equipment'));
+        break;
       // Add more cases for other entities
       default:
         console.error('Unknown entity type:', entity);
     }
   };
+  
 
 
   return (
@@ -135,10 +150,9 @@ const App = () => {
           <Route path="/quest" element={<Quests entities={quests} createQuest={handleCreateEntity} editQuest={handleEditEntity} deleteQuest={handleDeleteEntity} />} />
           <Route path="/location" element={<Locations entities={locations} createLocation={handleCreateEntity} editLocation={handleEditEntity} deleteLocation={handleDeleteEntity} />} />
           <Route path="/item" element={<Items entities={items} createItem={handleCreateEntity} editItem={handleEditEntity} deleteItem={handleDeleteEntity} />} />
-          <Route path="/npc" element={<NPC />} />
-          <Route path="/event-logs" element={<EventLogs />} />
-          <Route path="/equipment" element={<Equipment />} />
-          {/* Change the route below to go to an edit page? */}
+          <Route path="/npc" element={<NPC entities={npcs} createNPC={handleCreateEntity} editNPC={handleEditEntity} deleteNPC={handleDeleteEntity} />} />
+          <Route path="/event-logs" element={<EventLogs entities={eventLogs} createEventLog={handleCreateEntity} editEventLog={handleEditEntity} deleteEventLog={handleDeleteEntity} />} />
+          <Route path="/equipment" element={<Equipment entities={equipment} createEquipment={handleCreateEntity} editEquipment={handleEditEntity} deleteEquipment={handleDeleteEntity} />} />
           <Route path="/:route/:campaignNumber" element={<CampaignManagement campaigns={campaigns} />} />
           <Route path="/campaigns/:campaignNumber" element={<CampaignManagement campaigns={campaigns} />} />
           <Route path="/campaigns/:campaignNumber/character-creation" element={<CharacterCreation campaigns={campaigns} setCampaigns={setCampaigns} />} />

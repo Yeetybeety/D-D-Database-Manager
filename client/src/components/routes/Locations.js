@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import EntityMainContent from '../EntityMainContent';
 
 const Locations = ({ entities, createLocation, deleteLocation, editLocation }) => {

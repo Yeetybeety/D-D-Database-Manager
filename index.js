@@ -132,65 +132,6 @@ app.get('/api/:entity', (req, res) => {
   getEntities(req.params.entity, req, res);
 });
 
-// app.get('/api/players', (req, res) => {
-//   db.query('SELECT * FROM Player2', (err, results) => {
-//     if (err) throw err;
-//     res.json(results);
-//   });
-// });
-
-// // Create a new quest
-// app.post('/api/quests', (req, res) => {
-//   const { QuestID, QuestName, Description, Status, Progress } = req.body;
-
-//   // Ensure all required fields are provided
-//   if (!QuestID || !QuestName || !Description || !Status || !Progress) {
-//     return res.status(400).send('Missing required fields');
-//   }
-
-//   const query = 'INSERT INTO Quest (QuestID, QuestName, Description, Status, Progress) VALUES (?, ?, ?, ?, ?)';
-//   db.query(query, [QuestID, QuestName, Description, Status, Progress], (err, result) => {
-//     if (err) {
-//       console.error('Error inserting quest:', err);
-//       return res.status(500).send('Error inserting quest');
-//     }
-//     res.json({ QuestID, QuestName, Description, Status, Progress });
-//   });
-// });
-
-// // Update an existing quest
-// app.put('/api/quests/:id', (req, res) => {
-//   const questId = req.params.id;
-//   const { QuestName, Description, Status, Progress } = req.body;
-
-//   // Ensure all required fields are provided
-//   if (!QuestName || !Description || !Status || !Progress) {
-//     return res.status(400).send('Missing required fields');
-//   }
-
-//   const query = 'UPDATE Quest SET QuestName = ?, Description = ?, Status = ?, Progress = ? WHERE QuestID = ?';
-//   db.query(query, [QuestName, Description, Status, Progress, questId], (err, result) => {
-//     if (err) {
-//       console.error('Error updating quest:', err);
-//       return res.status(500).send('Error updating quest');
-//     }
-//     if (result.affectedRows === 0) {
-//       return res.status(404).send('Quest not found');
-//     }
-//     res.json({ QuestID: questId, QuestName, Description, Status, Progress });
-//   });
-// });
-
-// // Delete a quest
-// app.delete('/api/quests/:id', (req, res) => {
-//   const questId = req.params.id;
-//   const query = 'DELETE FROM Quest WHERE QuestID = ?';
-//   db.query(query, [questId], (err, result) => {
-//     if (err) throw err;
-//     res.json({ message: 'Quest deleted successfully' });
-//   });
-// });
-
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
