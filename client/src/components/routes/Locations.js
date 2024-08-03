@@ -1,18 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EntityMainContent from '../EntityMainContent';
 
-const Locations = () => {
-    const [locations, setLocations] = useState([]);
+const Locations = ({ entities, createLocation, deleteLocation, editLocation }) => {
+
+    const locations = entities
 
     const handleCreateLocation = (newLocation) => {
-        setLocations([...locations, { ...newLocation }]);
+        createLocation('location', newLocation);
     };
 
+    const handleEditLocation = (updatedLocation) => {
+        editLocation('location', updatedLocation);
+    };
+
+    const handleDeleteLocation = (locationId) => {
+        console.log(locationId);
+        deleteLocation('location', locationId);
+    };
+
+    // Pass in fields so the 'Create' component knows which input fields to render
     const fields = {
-        'Location ID': null,
-        'Location Name': null,
+        'LocationID': null,
+        'LocationName': null,
         'Description': null,
-        'Parent Location ID': null,
+        'ParentLocationID': null,
     };
 
     return (
@@ -22,6 +33,8 @@ const Locations = () => {
                 fields={fields} 
                 entities={locations} 
                 onCreateEntity={handleCreateLocation} 
+                onDeleteEntity={handleDeleteLocation} 
+                onEditEntity={handleEditLocation} 
             />
         </div>
     );
