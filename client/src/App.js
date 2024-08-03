@@ -155,6 +155,12 @@ const App = () => {
           <Route path="/players" element={<PlayerPage />} />
           <Route path="/players/:id" element={<PlayerDetails />} />
           <Route path="/player/edit/:id" element={<PlayerForm />} />
+          <Route path="/npc" element={<NPC />} />
+          <Route path="/items" element={<Items />} />
+          <Route path="/event-logs" element={<EventLogs />} />
+          <Route path="/locations" element={<Locations />} />
+          <Route path="/equipment" element={<Equipment />} />
+          {/* <Route path="/inventory" component={<Inventory />} /> */}
           {/* Change the route below to go to an edit page? */}
           <Route path="/quest" element={<Quests entities={quests} createQuest={handleCreateEntity} editQuest={handleEditEntity} deleteQuest={handleDeleteEntity} />} />
           <Route path="/location" element={<Locations entities={locations} createLocation={handleCreateEntity} editLocation={handleEditEntity} deleteLocation={handleDeleteEntity} />} />
