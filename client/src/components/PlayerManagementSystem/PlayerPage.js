@@ -135,7 +135,7 @@ const PlayerPage = () => {
       {/* Heading and Add Player Button */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Player Management</h1>
-        <DefaultButton onClick={() => setIsFormModalOpen(true)}>Add New Player</DefaultButton>
+        <DefaultButton onClick={() => setIsFormModalOpen(true)}> Add New Player</DefaultButton>
       </div>
 
       {/* Player list */}
@@ -143,6 +143,7 @@ const PlayerPage = () => {
         players={players}
         onEdit={handleEditPlayer}
         onDelete={handleDeleteClick}
+        setPlayers={setPlayers}
       />
 
       {/* Player form modal */}
