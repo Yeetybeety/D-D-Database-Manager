@@ -244,6 +244,7 @@ app.put('/api/players/:id/details', async (req, res) => {
     }
 
     await pool.query('COMMIT');
+    
     console.log(`Player details updated successfully for player ${playerId}`);
     res.json({ message: 'Player details updated successfully' });
   } catch (error) {
