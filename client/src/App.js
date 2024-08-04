@@ -36,7 +36,7 @@ const App = () => {
 
   const fetchEntities = async (endpoint) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/${endpoint}`);
+      const response = await fetch(`/api/${endpoint}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -57,7 +57,7 @@ const App = () => {
 
   const handleCreateEntity = async (entity, newEntity) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/${entity}`, {
+      const response = await fetch(`/api/${entity}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ const App = () => {
 
   const handleDeleteEntity = async (entity, entityId) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/${entity}/${entityId}`, {
+      const response = await fetch(`/api/${entity}/${entityId}`, {
         method: 'DELETE',
       });
 
@@ -95,7 +95,7 @@ const App = () => {
 
   const handleEditEntity = async (entity, updatedEntity) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/${entity}/${updatedEntity.id}`, {
+      const response = await fetch(`/api/${entity}/${updatedEntity.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

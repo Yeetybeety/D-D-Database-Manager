@@ -22,6 +22,20 @@ const fetchPlayerDetails = async (playerId) => {
     }
 };
 
+// Fetches player inventory by playerId
+const fetchPlayerInventory = async (playerId) => {
+    try {
+        const response = await fetch(`/api/players/${playerId}/inventory`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch player details');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching player details:', error);
+        throw error;
+    }
+};
+
 // Temp display for stats
 const SimpleDisplay = ({ label, value, icon }) => (
     <div className="flex justify-between">
@@ -33,7 +47,23 @@ const SimpleDisplay = ({ label, value, icon }) => (
     </div>
 );
 
-const PlayerDetails = () => {
+// Sample function to process and fill the array
+function fillItemNames(itemList) {
+    // Initialize an array of size 20 filled with null values
+    const resultArray = new Array(20).fill(null);
+  
+    // Extract item names from the list of JSON objects
+    const itemNames = itemList.map(item => item.ItemName);
+  
+    // Place item names into the result array
+    for (let i = 0; i < itemNames.length && i < 20; i++) {
+      resultArray[i] = itemNames[i];
+    }
+  
+    return resultArray;
+  }
+
+const PlayerDetails = ({ ownedItems }) => {
     const { id } = useParams();
     const [player, setPlayer] = useState(null);
     const [notes, setNotes] = useState('');
@@ -42,12 +72,17 @@ const PlayerDetails = () => {
     const [hasChanges, setHasChanges] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState(null);
+    const [inventory, setInventory] = useState([]);
 
     useEffect(() => {
         const loadPlayerDetails = async () => {
             try {
                 const data = await fetchPlayerDetails(id);
-                data.inventory = data.inventory || Array(20).fill(null); // Ensure inventory is initialized
+                const playerInventory = await fetchPlayerInventory(id);
+                console.log(playerInventory);
+                // data.inventory = data.inventory || Array(20).fill(null); // Ensure inventory is initialized
+                data.inventory = fillItemNames(playerInventory);
+                console.log(data.inventory);
                 setPlayer(data);
                 setNotes(data.Notes || '');
                 setLoading(false);
