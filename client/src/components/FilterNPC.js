@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 
-const FilterComponent = () => {
+const FilterComponent = ({ results, setResults, fetchNPC }) => {
     const [filters, setFilters] = useState([{ field: '', operator: '=', value: '' }]);
-    const [results, setResults] = useState([]);
 
     const handleAddFilter = () => {
         setFilters([...filters, { field: '', operator: '=', value: '' }]);
@@ -33,7 +32,7 @@ const FilterComponent = () => {
 
     const handleReset = () => {
         setFilters([{ field: '', operator: '=', value: '' }]);
-        setResults([]);
+        fetchNPC();
     };
 
     return (
@@ -93,7 +92,7 @@ const FilterComponent = () => {
             >
                 Reset Filters
             </button>
-            <div className="pt-4">
+            {/* <div className="pt-4">
                 <h3 className="text-lg font-semibold mb-2">Results:</h3>
                 <ul>
                     {results.length > 0 ? (
@@ -104,7 +103,7 @@ const FilterComponent = () => {
                         <div>No Results Found.</div>
                     )}
                 </ul>
-            </div>
+            </div> */}
         </div>
     );
 };

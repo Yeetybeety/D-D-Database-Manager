@@ -2,7 +2,7 @@ import React from 'react';
 import EntityMainContent from '../EntityMainContent';
 import NpcFilter from '../FilterNPC';
 
-const NPC = ({ entities, createNPC, deleteNPC, editNPC }) => {
+const NPC = ({ entities, createNPC, deleteNPC, editNPC, setNPCs, fetchNPC }) => {
     const npcs = entities;
 
     const handleCreateNPC = (newNPC) => {
@@ -17,6 +17,10 @@ const NPC = ({ entities, createNPC, deleteNPC, editNPC }) => {
         console.log(npcId);
         deleteNPC('NPC2', npcId);
     };
+
+    const handleResetFilter = () => {      
+        fetchNPC('NPC2');
+    }
 
     // Define fields for NPC with specific selection options
     const fields = {
@@ -33,7 +37,7 @@ const NPC = ({ entities, createNPC, deleteNPC, editNPC }) => {
 
     return (
         <div>
-            <NpcFilter />
+            <NpcFilter results={npcs} setResults={setNPCs} fetchNPC={handleResetFilter}/>
             <EntityMainContent
                 entity="NPC2"
                 fields={fields}
