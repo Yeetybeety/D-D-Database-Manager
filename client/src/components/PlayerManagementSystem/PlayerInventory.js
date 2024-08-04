@@ -69,3 +69,4 @@ const PlayerInventory = ({ inventory = [], onAddItemClick, onDeleteItemClick }) 
 };
 
 export default PlayerInventory;
+

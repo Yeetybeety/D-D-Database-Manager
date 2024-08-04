@@ -167,9 +167,6 @@ app.get('/api/players/:id/inventory/count', async (req, res) => {
 });
 
 
-
-
-
 // Delete Player
 app.delete('/api/players/:id', async (req, res) => {
   const { id } = req.params;
