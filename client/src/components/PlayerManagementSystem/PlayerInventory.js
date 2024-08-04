@@ -12,7 +12,7 @@ const PlayerInventory = ({ inventory = [], onAddItemClick, onDeleteItemClick }) 
           >
             {item ? (
               <>
-                <span className="text-center">{item.name}</span>
+                <span className="text-center">{item}</span>
                 <button
                   className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                   onClick={() => onDeleteItemClick(index)}

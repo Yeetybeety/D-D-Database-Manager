@@ -1,11 +1,11 @@
 const express = require('express');
 const mysql = require('mysql2/promise'); // Use the promise-based version
 const app = express();
-//const cors = require('cors');
+// const cors = require('cors');
 const port = 3001;
 require('dotenv').config();
 
-//app.use(cors()); // Enable CORS for all routes
+// app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // This line is crucial for parsing JSON request bodies
 
 const dbName = process.env.DB_NAME;
@@ -30,6 +30,18 @@ app.get('/api/players', async (req, res) => {
   } catch (err) {
     console.error('Error:', err);
     res.status(500).json({ error: 'An error occurred while trying to fetch players.' });
+  }
+});
+
+// Get Player Inventory
+app.get('/api/players/:id/inventory', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM Inventory s, Item i WHERE s.PlayerID = ? and s.ItemID = i.ItemID', [id]);
+    res.json(rows);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch player inventory.' });
   }
 });
 
