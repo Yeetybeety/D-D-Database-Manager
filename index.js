@@ -35,6 +35,29 @@ app.get('/api/players', async (req, res) => {
   }
 });
 
+// Route to handle NPC filtering
+app.get('/api/npc', async (req, res) => {
+  try {
+    const { filter } = req.query;
+
+    // Basic validation to ensure filter is a string
+    if (typeof filter !== 'string') {
+      return res.status(400).json({ error: 'Invalid filter parameter' });
+    }
+
+    // Construct the query
+    const query = `SELECT * FROM NPC2 WHERE ${filter}`;
+    
+    // Execute the query
+    const [rows] = await pool.query(query);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching NPCs:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch NPCs.' });
+  }
+});
+
 // Get Player Inventory
 app.get('/api/players/:id/inventory', async (req, res) => {
   try {
