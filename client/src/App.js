@@ -66,13 +66,17 @@ const App = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create ${entity}`);
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error}`);
+      } else {
+        alert('Success!');
       }
 
       // const createdEntity = await response.json();
 
       updateEntityState(entity);
     } catch (error) {
+      alert(error);
       console.error(`Error creating ${entity}:`, error);
     }
   };
@@ -85,6 +89,8 @@ const App = () => {
 
       if (!response.ok) {
         throw new Error(`Failed to delete ${entity}`);
+      } else {
+        alert('Success');
       }
       updateEntityState(entity);
     } catch (error) {
@@ -105,12 +111,15 @@ const App = () => {
 
       if (!response.ok) {
         throw new Error(`Failed to edit ${entity}`);
+      } else {
+        alert('Success');
       }
 
       // const updated = await response.json();
 
       updateEntityState(entity);
     } catch (error) {
+      alert(error);
       console.error(`Error editing ${entity}:`, error);
     }
   };

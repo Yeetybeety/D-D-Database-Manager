@@ -9,7 +9,7 @@ const EntityMainContent = ({ entity, entities, onCreateEntity, fields, onDeleteE
     const [showModal, setShowModal] = useState(false);
 
     const handleCreateEntity = (newEntity) => {
-        onCreateEntity(newEntity);
+        onCreateEntity(newEntity)
         setShowModal(false);
     };
 

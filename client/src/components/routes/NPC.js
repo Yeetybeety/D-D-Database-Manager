@@ -1,5 +1,6 @@
 import React from 'react';
 import EntityMainContent from '../EntityMainContent';
+import NpcFilter from '../FilterNPC';
 
 const NPC = ({ entities, createNPC, deleteNPC, editNPC }) => {
     const npcs = entities;
@@ -32,6 +33,7 @@ const NPC = ({ entities, createNPC, deleteNPC, editNPC }) => {
 
     return (
         <div>
+            <NpcFilter />
             <EntityMainContent
                 entity="NPC2"
                 fields={fields}
