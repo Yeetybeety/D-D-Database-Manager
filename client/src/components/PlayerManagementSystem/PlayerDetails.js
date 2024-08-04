@@ -27,11 +27,31 @@ const fetchPlayerInventory = async (playerId) => {
     try {
         const response = await fetch(`/api/players/${playerId}/inventory`);
         if (!response.ok) {
-            throw new Error('Failed to fetch player details');
+            throw new Error('Failed to fetch player inventory');
         }
         return await response.json();
     } catch (error) {
-        console.error('Error fetching player details:', error);
+        console.error('Error fetching player inventory:', error);
+        throw error;
+    }
+};
+
+// Updates player details
+const updatePlayerDetails = async (playerId, updatedData) => {
+    try {
+        const response = await fetch(`/api/players/${playerId}/details`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedData),
+        });
+        if (!response.ok) {
+            throw new Error('Failed to update player details');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error updating player details:', error);
         throw error;
     }
 };
@@ -52,18 +72,17 @@ function fillItemNames(itemList) {
     // Initialize an array of size 20 filled with null values
     const resultArray = new Array(20).fill(null);
   
-    // Extract item names from the list of JSON objects
-    const itemNames = itemList.map(item => item.ItemName);
-  
-    // Place item names into the result array
-    for (let i = 0; i < itemNames.length && i < 20; i++) {
-      resultArray[i] = itemNames[i];
-    }
+    // Place items into the resultArray
+    itemList.forEach((item, index) => {
+        if (index < 20) {
+            resultArray[index] = item;
+        }
+    });
   
     return resultArray;
-  }
+}
 
-const PlayerDetails = ({ ownedItems }) => {
+const PlayerDetails = () => {
     const { id } = useParams();
     const [player, setPlayer] = useState(null);
     const [notes, setNotes] = useState('');
@@ -72,18 +91,16 @@ const PlayerDetails = ({ ownedItems }) => {
     const [hasChanges, setHasChanges] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState(null);
-    const [inventory, setInventory] = useState([]);
+    const [inventory, setInventory] = useState(new Array(20).fill(null)); // Initialize with 20 null values
 
     useEffect(() => {
         const loadPlayerDetails = async () => {
             try {
                 const data = await fetchPlayerDetails(id);
                 const playerInventory = await fetchPlayerInventory(id);
-                console.log(playerInventory);
-                // data.inventory = data.inventory || Array(20).fill(null); // Ensure inventory is initialized
-                data.inventory = fillItemNames(playerInventory);
-                console.log(data.inventory);
+                const filledInventory = fillItemNames(playerInventory);
                 setPlayer(data);
+                setInventory(filledInventory); // Ensure inventory is set correctly
                 setNotes(data.Notes || '');
                 setLoading(false);
             } catch (err) {
@@ -94,26 +111,6 @@ const PlayerDetails = ({ ownedItems }) => {
 
         loadPlayerDetails();
     }, [id]);
-
-    const updatePlayerDetails = async (playerId, updatedData) => {
-        try {
-            const response = await fetch(`/api/players/${playerId}/details`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updatedData),
-            });
-            if (!response.ok) {
-                throw new Error('Failed to update player details');
-            }
-            setPlayer(updatedData);
-            return await response.json();
-        } catch (error) {
-            console.error('Error updating player details:', error);
-            throw error;
-        }
-    };
 
     const handleStatChange = (statName, newValue) => {
         setPlayer(prevPlayer => ({
@@ -149,24 +146,51 @@ const PlayerDetails = ({ ownedItems }) => {
         setIsModalOpen(true);
     };
 
-    const handleFormSubmit = (formData) => {
-        const updatedInventory = [...player.inventory];
-        updatedInventory[selectedSlot] = formData;
-        setPlayer(prevPlayer => ({
-            ...prevPlayer,
-            inventory: updatedInventory
-        }));
-        setIsModalOpen(false);
-        setSelectedSlot(null);
+    const handleFormSubmit = async (formData) => {
+        try {
+            const updatedInventory = [...inventory];
+            updatedInventory[selectedSlot] = formData;
+
+            // Optionally, send this to the backend to update the database
+            const response = await fetch(`/api/players/${id}/inventory`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ...formData, PlayerID: id }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to add item to inventory');
+            }
+            const playerInventory = fillItemNames(await fetchPlayerInventory(id));
+            setInventory(playerInventory);
+            setIsModalOpen(false);
+            setSelectedSlot(null);
+        } catch (error) {
+            console.error('Error updating inventory:', error);
+        }
     };
 
-    const handleDeleteItem = (index) => {
-        const updatedInventory = [...player.inventory];
-        updatedInventory[index] = null;
-        setPlayer(prevPlayer => ({
-            ...prevPlayer,
-            inventory: updatedInventory
-        }));
+    const handleDeleteItem = async (index) => {
+        try {
+            const item = inventory[index];
+            if (item) {
+                const response = await fetch(`/api/players/${id}/inventory/${item.ItemID}`, {
+                    method: 'DELETE',
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Failed to delete item from inventory');
+                }
+            }
+
+            const updatedInventory = [...inventory];
+            updatedInventory[index] = null;
+            setInventory(updatedInventory);
+        } catch (error) {
+            console.error('Error deleting item from inventory:', error);
+        }
     };
 
     if (loading) return <div>Loading...</div>;
@@ -188,7 +212,7 @@ const PlayerDetails = ({ ownedItems }) => {
                     {/* Display player inventory */}
                     <h2 className="text-xl font-semibold mb-2">Inventory</h2>
                     <PlayerInventory 
-                        inventory={player.inventory} 
+                        inventory={inventory} 
                         onAddItemClick={handleAddItemClick}
                         onDeleteItemClick={handleDeleteItem} 
                     />
@@ -258,7 +282,7 @@ const PlayerDetails = ({ ownedItems }) => {
                             &times;
                         </button>
                         <InventoryForm
-                            inventory={selectedSlot !== null ? player.inventory[selectedSlot] : null}
+                            inventory={selectedSlot !== null ? inventory[selectedSlot] : null}
                             onSubmit={handleFormSubmit}
                             onCancel={() => {
                                 setIsModalOpen(false);
