@@ -12,13 +12,13 @@ const PlayerPage = () => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, playerId: null });
-  const [averageGold, setAverageGold] = useState(0);
+  const [averageGoldByClass, setAverageGoldByClass] = useState([]);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchPlayers();
-    fetchAverageGold();
+    fetchAverageGoldByClass();
   }, []);
 
   const fetchPlayers = async () => {
@@ -38,18 +38,17 @@ const PlayerPage = () => {
     }
   };
 
-  const fetchAverageGold = async () => {
+  const fetchAverageGoldByClass = async () => {
     try {
-      const response = await fetch('/api/players/average-gold');
+      const response = await fetch('/api/players/average-gold-by-class');
       if (!response.ok) {
-        throw new Error('Failed to fetch average gold');
+        throw new Error('Failed to fetch average gold by class');
       }
       const data = await response.json();
-      console.log('Fetched Average Gold:', data);
-      setAverageGold(data.averageGold || 0);
+      console.log('Fetched Average Gold by Class:', data);
+      setAverageGoldByClass(data);
     } catch (err) {
-      console.error('Error fetching average gold:', err);
-      setAverageGold(0); // Set a default value in case of error
+      console.error('Error fetching average gold by class:', err);
     }
   };
 
@@ -69,7 +68,7 @@ const PlayerPage = () => {
       const addedPlayer = await response.json();
       setPlayers(prevPlayers => [...prevPlayers, addedPlayer]);
       setIsFormModalOpen(false);
-      fetchAverageGold(); // Update the average gold after adding a player
+      fetchAverageGoldByClass(); // Update the average gold by class after adding a player
     } catch (err) {
       console.error('Error adding player:', err);
       // TODO: Implement user-facing error message
@@ -99,7 +98,7 @@ const PlayerPage = () => {
       setPlayers(prevPlayers => prevPlayers.map(p => p.PlayerID === updated.PlayerID ? updated : p));
       setIsFormModalOpen(false);
       setEditingPlayer(null);
-      fetchAverageGold(); // Update the average gold after updating a player
+      fetchAverageGoldByClass(); // Update the average gold by class after updating a player
     } catch (err) {
       console.error('Error updating player:', err);
       // TODO: Implement user-facing error message
@@ -120,7 +119,7 @@ const PlayerPage = () => {
         throw new Error('Failed to delete player');
       }
       setPlayers(prevPlayers => prevPlayers.filter(player => player.PlayerID !== id));
-      fetchAverageGold(); // Update the average gold after deleting a player
+      fetchAverageGoldByClass(); // Update the average gold by class after deleting a player
     } catch (err) {
       console.error('Error deleting player:', err);
       // TODO: Implement user-facing error message
@@ -140,7 +139,14 @@ const PlayerPage = () => {
       </div>
 
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Average Gold: {Number(averageGold).toFixed(2)}</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Average Gold by Class</h2>
+        <ul>
+          {averageGoldByClass.map(({ Class, averageGold }) => (
+            <li key={Class}>
+              {Class}: {Number(averageGold).toFixed(2)}
+            </li>
+          ))}
+        </ul>
       </div>
 
       <PlayerList

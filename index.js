@@ -164,17 +164,24 @@ app.get('/api/players/:id/inventory/count', async (req, res) => {
   }
 });
 
-// Get average gold across all players
-app.get('/api/players/average-gold', async (req, res) => {
+// Get average gold for each class of players
+app.get('/api/players/average-gold-by-class', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT AVG(Gold) as averageGold FROM Player');
-    const averageGold = rows[0].averageGold || 0;
-    res.json({ averageGold });
+    const [rows] = await pool.query(`
+      SELECT Class, AVG(Gold) as averageGold
+      FROM (
+        SELECT Class, Gold
+        FROM Player
+      ) AS PlayerGold
+      GROUP BY Class
+    `);
+    res.json(rows);
   } catch (err) {
     console.error('Error:', err);
-    res.status(500).json({ error: 'An error occurred while trying to fetch the average gold.' });
+    res.status(500).json({ error: 'An error occurred while trying to fetch the average gold by class.' });
   }
 });
+
 
 
 
