@@ -126,6 +126,25 @@ app.post('/api/players', async (req, res) => {
   }
 });
 
+// Get total quantity of items in inventory for a specific player
+app.get('/api/players/:id/inventory/count', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('Player ID:', id); // Log the received Player ID
+    const [rows] = await pool.query('SELECT IFNULL(SUM(Quantity), 0) AS totalQuantity FROM Inventory WHERE PlayerID = ?', [id]);
+    console.log('SQL Result:', rows); // Add logging
+    const totalQuantity = rows[0].totalQuantity || 0;
+    res.json({ totalQuantity });
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to count the inventory items.' });
+  }
+});
+
+
+
+
+
 // Delete Player
 app.delete('/api/players/:id', async (req, res) => {
   const { id } = req.params;
