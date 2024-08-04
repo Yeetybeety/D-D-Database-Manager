@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom'; // Import useParams to get playerId from URL
+import { useParams } from 'react-router-dom';
 
 const PlayerInventory = ({ inventory = [], onAddItemClick, onDeleteItemClick }) => {
-    const { id: playerId } = useParams(); // Get playerId from URL parameters
+    const { id: playerId } = useParams();
     const [itemCount, setItemCount] = useState(0);
 
     const countItems = async () => {
@@ -12,7 +12,7 @@ const PlayerInventory = ({ inventory = [], onAddItemClick, onDeleteItemClick }) 
                 throw new Error('Failed to fetch inventory count');
             }
             const data = await response.json();
-            console.log('Count Response:', data); // Add logging
+            console.log('Count Response:', data);
             setItemCount(data.totalQuantity);
         } catch (error) {
             console.error('Error fetching inventory count:', error);
@@ -23,17 +23,11 @@ const PlayerInventory = ({ inventory = [], onAddItemClick, onDeleteItemClick }) 
         if (playerId) {
             countItems();
         }
-    }, [playerId]);
+    }, [playerId, inventory]); // Run the countItems function whenever playerId or inventory changes
 
     return (
         <div>
             <div className="flex justify-between mb-4">
-                <button
-                    className="bg-green-500 text-white rounded-full p-2"
-                    onClick={countItems}
-                >
-                    Count Items
-                </button>
                 <span>Total Items: {itemCount}</span>
             </div>
             <div className="grid grid-cols-5 gap-2 mb-4">
@@ -69,4 +63,3 @@ const PlayerInventory = ({ inventory = [], onAddItemClick, onDeleteItemClick }) 
 };
 
 export default PlayerInventory;
-
