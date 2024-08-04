@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import EntityEdit from './EditEntity';
-const EntityDisplay = ({ entityData, fields, onDelete, onEdit }) => {
+
+
+const EntityDisplay = ({ entity, entityData, fields, onDelete, onEdit }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleOpenModal = () => {
@@ -45,11 +47,12 @@ const EntityDisplay = ({ entityData, fields, onDelete, onEdit }) => {
 
       <div className="flex justify-end mt-4">
         <button
-          onClick={() => onDelete(entityData.Title)}
+          onClick={() => onDelete(entityData[`${entity}ID`])}
           className="bg-red-500 text-white py-2 px-4 rounded-lg shadow-lg hover:bg-red-700 transition duration-300 mr-2"
         >
           Delete
         </button>
+
         <button
           onClick={handleOpenModal}
           className="bg-blue-500 text-white py-2 px-4 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300"

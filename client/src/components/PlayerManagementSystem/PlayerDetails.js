@@ -3,50 +3,24 @@ import { useParams } from 'react-router-dom';
 import { CoinIcon } from '../generic/Icons';
 import Button from '../generic/DefaultButton';
 import ProgressBar from './PlayerProgressBar';
-import InventoryGrid from './PlayerInventory';
+import PlayerInventory from './PlayerInventory';
 import Tooltip from '../generic/Tooltip';
-
 import StatDisplay from '../generic/StatDisplay';
+import InventoryForm from './InventoryForm';
 
 // Fetches player details from server, including player stats
 const fetchPlayerDetails = async (playerId) => {
     try {
-        // GET request to backend
         const response = await fetch(`/api/players/${playerId}`);
         if (!response.ok) {
             throw new Error('Failed to fetch player details');
         }
-        // should return a JSON of player object + player stats object
         return await response.json();
     } catch (error) {
         console.error('Error fetching player details:', error);
         throw error;
     }
 };
-
-// DEPRECATED
-// const updatePlayerNotes = async (playerId, notes) => {
-//     try {
-//         // make PUT request to update player notes
-//         const response = await fetch(`/api/players/${playerId}/notes`, {
-//             method: 'PUT',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify({ notes }),
-//         });
-//         if (!response.ok) {
-//             throw new Error('Failed to update player notes');
-//         }
-//         // returns updated notes
-//         return await response.json();
-//     } catch (error) {
-//         console.error('Error updating player notes:', error);
-//         throw error;
-//     }
-// };
-
-
 
 // Temp display for stats
 const SimpleDisplay = ({ label, value, icon }) => (
@@ -59,28 +33,23 @@ const SimpleDisplay = ({ label, value, icon }) => (
     </div>
 );
 
-
-
-
 const PlayerDetails = () => {
-    // states
     const { id } = useParams();
     const [player, setPlayer] = useState(null);
     const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [hasChanges, setHasChanges] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState(null);
 
-    // fetch player details upon loading
-    // side effects - runs after component renders
     useEffect(() => {
         const loadPlayerDetails = async () => {
             try {
-                // fetch all details about player
                 const data = await fetchPlayerDetails(id);
-                // update states
-                setPlayer(data); // JS obj of player + playerstats
-                setNotes(data.Notes || ''); // set notes if they exist
+                data.inventory = data.inventory || Array(20).fill(null); // Ensure inventory is initialized
+                setPlayer(data);
+                setNotes(data.Notes || '');
                 setLoading(false);
             } catch (err) {
                 setError('Failed to load player details');
@@ -92,8 +61,6 @@ const PlayerDetails = () => {
     }, [id]);
 
     const updatePlayerDetails = async (playerId, updatedData) => {
-        console.log(updatedData);
-        console.log(playerId);
         try {
             const response = await fetch(`/api/players/${playerId}/details`, {
                 method: 'PUT',
@@ -137,22 +104,40 @@ const PlayerDetails = () => {
             };
             await updatePlayerDetails(id, updatedData);
             setHasChanges(false);
-            // TODO: display success alert
         } catch (err) {
             setError('Failed to update player details');
-            // TODO: display error alert
         }
     };
 
+    const handleAddItemClick = (index) => {
+        setSelectedSlot(index);
+        setIsModalOpen(true);
+    };
 
-    // handle messages under different states
+    const handleFormSubmit = (formData) => {
+        const updatedInventory = [...player.inventory];
+        updatedInventory[selectedSlot] = formData;
+        setPlayer(prevPlayer => ({
+            ...prevPlayer,
+            inventory: updatedInventory
+        }));
+        setIsModalOpen(false);
+        setSelectedSlot(null);
+    };
+
+    const handleDeleteItem = (index) => {
+        const updatedInventory = [...player.inventory];
+        updatedInventory[index] = null;
+        setPlayer(prevPlayer => ({
+            ...prevPlayer,
+            inventory: updatedInventory
+        }));
+    };
+
     if (loading) return <div>Loading...</div>;
     if (error) return <div>{error}</div>;
     if (!player) return <div>Player not found</div>;
 
-    // Placeholder information
-    // TODO: get player inventory and equipment
-    const inventory = [{ name: 'Potion' }, { name: 'Sword' }];
     const equipment = {
         Armor: 'Leather Armor',
         Weapon: 'Short Sword',
@@ -167,7 +152,11 @@ const PlayerDetails = () => {
                 <div className="player-details-left">
                     {/* Display player inventory */}
                     <h2 className="text-xl font-semibold mb-2">Inventory</h2>
-                    <InventoryGrid inventory={inventory} />
+                    <PlayerInventory 
+                        inventory={player.inventory} 
+                        onAddItemClick={handleAddItemClick}
+                        onDeleteItemClick={handleDeleteItem} 
+                    />
 
                     {/* Temporary display of equipped items */}
                     <h2 className="text-xl font-semibold mb-2">Equipped Items</h2>
@@ -207,7 +196,7 @@ const PlayerDetails = () => {
                     {/* Calculated Stats */}
                     <h3 className="font-semibold mb-2">Calculated Stats</h3>
                     <div className="grid grid-cols-2 gap-2 mb-4">
-                        <SimpleDisplay label="Attack" value={player.stats.Attack ||0} />
+                        <SimpleDisplay label="Attack" value={player.stats.Attack || 0} />
                         <SimpleDisplay label="Defense" value={player.stats.Defense || 0} />
                         <SimpleDisplay label="Evasion" value={`${player.stats.Evasion || 0}%`} />
                         <SimpleDisplay label="Accuracy" value={`${player.stats.Accuracy || 0}%`} />
@@ -226,6 +215,24 @@ const PlayerDetails = () => {
 
                 </div>
             </div>
+
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-6 rounded-lg relative">
+                        <button onClick={() => setIsModalOpen(false)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+                            &times;
+                        </button>
+                        <InventoryForm
+                            inventory={selectedSlot !== null ? player.inventory[selectedSlot] : null}
+                            onSubmit={handleFormSubmit}
+                            onCancel={() => {
+                                setIsModalOpen(false);
+                                setSelectedSlot(null);
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

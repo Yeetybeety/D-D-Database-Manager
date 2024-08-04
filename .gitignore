@@ -19,3 +19,6 @@ Thumbs.db
 
 # Windows shortcuts
 *.lnk
+
+# important files
+.env
