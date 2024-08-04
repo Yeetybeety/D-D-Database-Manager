@@ -8,15 +8,15 @@ const Quests = ({ entities, createQuest, deleteQuest, editQuest }) => {
     const quests = entities
 
     const handleCreateQuest = (newQuest) => {
-        createQuest('quest', newQuest);
+        return createQuest('quest', newQuest);
     };
 
     const handleEditQuest = (updatedQuest) => {
-        editQuest('quest', updatedQuest);
+        return editQuest('quest', updatedQuest);
     };
 
     const handleDeleteQuest = (questId) => {
-       deleteQuest('quest', questId);
+        return deleteQuest('quest', questId);
     };
 
     // Pass in fields so the 'Create' component knows which input fields to render

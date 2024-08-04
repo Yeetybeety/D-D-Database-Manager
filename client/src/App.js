@@ -66,13 +66,17 @@ const App = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create ${entity}`);
+        const errorData = await response.json();
+        alert(`Error: ${errorData.error}`);
+      } else {
+        alert('Success!');
       }
 
       // const createdEntity = await response.json();
 
       updateEntityState(entity);
     } catch (error) {
+      alert(error);
       console.error(`Error creating ${entity}:`, error);
     }
   };
@@ -85,6 +89,8 @@ const App = () => {
 
       if (!response.ok) {
         throw new Error(`Failed to delete ${entity}`);
+      } else {
+        alert('Success');
       }
       updateEntityState(entity);
     } catch (error) {
@@ -105,12 +111,15 @@ const App = () => {
 
       if (!response.ok) {
         throw new Error(`Failed to edit ${entity}`);
+      } else {
+        alert('Success');
       }
 
       // const updated = await response.json();
 
       updateEntityState(entity);
     } catch (error) {
+      alert(error);
       console.error(`Error editing ${entity}:`, error);
     }
   };
@@ -159,7 +168,7 @@ const App = () => {
           <Route path="/quest" element={<Quests entities={quests} createQuest={handleCreateEntity} editQuest={handleEditEntity} deleteQuest={handleDeleteEntity} />} />
           <Route path="/location" element={<Locations entities={locations} createLocation={handleCreateEntity} editLocation={handleEditEntity} deleteLocation={handleDeleteEntity} />} />
           <Route path="/item" element={<Items entities={items} createItem={handleCreateEntity} editItem={handleEditEntity} deleteItem={handleDeleteEntity} />} />
-          <Route path="/npc" element={<NPC entities={npcs} createNPC={handleCreateEntity} editNPC={handleEditEntity} deleteNPC={handleDeleteEntity} />} />
+          <Route path="/npc" element={<NPC entities={npcs} createNPC={handleCreateEntity} editNPC={handleEditEntity} deleteNPC={handleDeleteEntity} setNPCs={setNpcs} fetchNPC={updateEntityState} />} />
           <Route path="/event-logs" element={<EventLogs entities={eventLogs} createEventLog={handleCreateEntity} editEventLog={handleEditEntity} deleteEventLog={handleDeleteEntity} />} />
           <Route path="/equipment" element={<Equipment entities={equipment} createEquipment={handleCreateEntity} editEquipment={handleEditEntity} deleteEquipment={handleDeleteEntity} />} />
           <Route path="/:route/:campaignNumber" element={<CampaignManagement campaigns={campaigns} />} />

@@ -5,6 +5,8 @@ const app = express();
 const port = 3001;
 require('dotenv').config();
 
+const sqlstring = require('sqlstring');
+
 // app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // This line is crucial for parsing JSON request bodies
 
@@ -30,6 +32,29 @@ app.get('/api/players', async (req, res) => {
   } catch (err) {
     console.error('Error:', err);
     res.status(500).json({ error: 'An error occurred while trying to fetch players.' });
+  }
+});
+
+// Route to handle NPC filtering
+app.get('/api/npc', async (req, res) => {
+  try {
+    const { filter } = req.query;
+
+    // Basic validation to ensure filter is a string
+    if (typeof filter !== 'string') {
+      return res.status(400).json({ error: 'Invalid filter parameter' });
+    }
+
+    // Construct the query
+    const query = `SELECT * FROM NPC2 WHERE ${filter}`;
+    
+    // Execute the query
+    const [rows] = await pool.query(query);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching NPCs:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch NPCs.' });
   }
 });
 
@@ -270,6 +295,103 @@ app.get('/api/players/:id', async (req, res) => {
     console.error('Error fetching player details:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
+});
+
+// Create an Entity
+const createEntity = async (tableName, req, res) => {
+  const { ...data } = req.body;
+  const columns = Object.keys(data).join(', ');
+  const values = Object.values(data);
+  const placeholders = values.map(() => '?').join(', ');
+
+  const table = capitalizeFirstLetter(tableName);
+  console.log("Inserting into table: ", table);
+
+  const query = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
+  try {
+    const [result] = await pool.query(query, values);
+    res.json({ ...data, ID: result.insertId });
+  } catch (err) {
+    const errorMessage = err.sqlMessage || `An error occurred while trying to insert into ${table}`;
+    res.status(500).json({ error: errorMessage });
+  }
+};
+
+function capitalizeFirstLetter(str) {
+  return str.replace(/^\w/, c => c.toUpperCase());
+}
+
+// Edit specific Entity from table
+const updateEntity = async (tableName, req, res) => {
+  const id = req.params.id;
+  const { ...data } = req.body;
+  const columns = Object.keys(data).map(key => `${key} = ?`).join(', ');
+  const [firstValue] = Object.values(data);
+  const values = [...Object.values(data), firstValue];
+
+  const table = capitalizeFirstLetter(tableName);
+  const columnName = `${table}ID`;
+
+  const query = `UPDATE ${table} SET ${columns} WHERE ${columnName} = ?`;
+  try {
+    const [result] = await pool.query(query, values);
+    if (result.affectedRows === 0) {
+      return res.status(404).send(`${table} not found`);
+    }
+    res.json(data);
+  } catch (err) {
+    console.error(`Error updating ${table}:`, err);
+    res.status(500).send(`Error updating ${table}`);
+  }
+};
+
+// Delete specific Entity from Table
+const deleteEntity = async (tableName, req, res) => {
+  const id = req.params.id;
+  console.log(id);
+  const table = capitalizeFirstLetter(tableName);
+  const columnName = `${table}ID`;
+
+  const query = `DELETE FROM ${table} WHERE ${columnName} = ?`;
+  try {
+    const [result] = await pool.query(query, [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).send(`${table} not found`);
+    }
+    res.sendStatus(204);
+    console.log("Successful Deletion");
+  } catch (err) {
+    console.error(`Error deleting from ${table}:`, err);
+    res.status(500).send(`Error deleting from ${table}`);
+  }
+};
+
+// Get all entities relating to that Table
+const getEntities = async (tableName, req, res) => {
+  const table = capitalizeFirstLetter(tableName);
+  try {
+    const [results] = await pool.query(`SELECT * FROM ${table}`);
+    res.json(results);
+  } catch (err) {
+    console.error(`Error fetching from ${table}:`, err);
+    res.status(500).send(`Error fetching from ${table}`);
+  }
+};
+
+app.post('/api/:entity', (req, res) => {
+  createEntity(req.params.entity, req, res);
+});
+
+app.put('/api/:entity/:id', (req, res) => {
+  updateEntity(req.params.entity, req, res);
+});
+
+app.delete('/api/:entity/:id', (req, res) => {
+  deleteEntity(req.params.entity, req, res);
+});
+
+app.get('/api/:entity', (req, res) => {
+  getEntities(req.params.entity, req, res);
 });
 
 app.listen(port, () => {
