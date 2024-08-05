@@ -65,3 +65,24 @@
 - Defense and evasion mechanics
 - Dice roll simulations
 - Status effects calculations
+
+
+## Calculated Stat Formulas
+
+### Core Stats
+- **Attack**: `STR * 2 + DEX * 1 + AGI * 1 + weapon attack`
+- **Defense**: `VIT * 2 + WIS * 1 + armor defense`
+- **Accuracy**: `DEX * 2 + INT * 1`
+- **Evasion**: `AGI * 2 + DEX * 1`
+
+### Derived Stats
+- **HP**: `VIT * 5`
+- **MP**: `INT * 3`
+
+### Damage Calculation
+- **Damage**: `Attack - Defense`
+
+### Max Values
+- **Max stat**: `100`
+- **Max weapon stat**: `200`
+- **Max accuracy/evasion**: `100%`
