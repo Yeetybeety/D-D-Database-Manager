@@ -3,8 +3,7 @@ import { useParams } from 'react-router-dom';
 import { CoinIcon } from '../generic/Icons';
 import Button from '../generic/DefaultButton';
 import ProgressBar from './PlayerProgressBar';
-import PlayerInventory from './PlayerInventory';
-import Tooltip from '../generic/Tooltip';
+import PlayerInventory from './Inventory';
 import StatDisplay from '../generic/StatDisplay';
 import InventoryForm from './InventoryForm';
 
@@ -67,40 +66,32 @@ const SimpleDisplay = ({ label, value, icon }) => (
     </div>
 );
 
-// Sample function to process and fill the array
-function fillItemNames(itemList) {
-    // Initialize an array of size 20 filled with null values
-    const resultArray = new Array(20).fill(null);
-  
-    // Place items into the resultArray
-    itemList.forEach((item, index) => {
-        if (index < 20) {
-            resultArray[index] = item;
-        }
-    });
-  
-    return resultArray;
-}
 
+// PlayerDetails component
 const PlayerDetails = () => {
-    const { id } = useParams();
     const [player, setPlayer] = useState(null);
     const [notes, setNotes] = useState('');
-    const [loading, setLoading] = useState(true);
+    const [inventory, setInventory] = useState(new Array(20).fill(null));
+
     const [error, setError] = useState(null);
+    const { id } = useParams();
+    const [loading, setLoading] = useState(true);
     const [hasChanges, setHasChanges] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
     const [selectedSlot, setSelectedSlot] = useState(null);
-    const [inventory, setInventory] = useState(new Array(20).fill(null)); // Initialize with 20 null values
+    const [deleteConfirmationModal, setDeleteConfirmationModal] = useState(false);
 
+    // run upon render of component
     useEffect(() => {
         const loadPlayerDetails = async () => {
             try {
+                // fetch player details and inventory
                 const data = await fetchPlayerDetails(id);
                 const playerInventory = await fetchPlayerInventory(id);
-                const filledInventory = fillItemNames(playerInventory);
+                // set player, inventory, and notes state
                 setPlayer(data);
-                setInventory(filledInventory); // Ensure inventory is set correctly
+                setInventory(playerInventory);
                 setNotes(data.Notes || '');
                 setLoading(false);
             } catch (err) {
@@ -112,6 +103,84 @@ const PlayerDetails = () => {
         loadPlayerDetails();
     }, [id]);
 
+    // add item to inventory
+    const handleAddItem = (slotIndex) => {
+        // indicate which inventory slot to add to, open add item modal
+        setSelectedItem(null);
+        setSelectedSlot(slotIndex);
+        setIsModalOpen(true);
+    };
+
+    // edit item in inventory
+    const handleEditItem = async (item) => {
+        // select item to edit, open edit item modal
+        setSelectedItem(item);
+        setSelectedSlot(null);
+        setIsModalOpen(true);
+    };
+
+    // handle form submission for adding or updating item
+    const handleFormSubmit = async (formData) => {
+        try {
+            // if no items selected, add new item to inventory, else edit selected item
+            const url = selectedItem
+                ? `/api/players/${id}/inventory/${selectedItem.ItemID}`
+                : `/api/players/${id}/inventory`;
+            const method = selectedItem ? 'PUT' : 'POST';
+
+            // make fetch request to backend
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ...formData, PlayerID: id, SlotIndex: selectedSlot }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to ${selectedItem ? 'update' : 'add'} item`);
+            }
+
+            // get updated inventory and set it as new state
+            const updatedInventory = await fetchPlayerInventory(id);
+            setInventory(updatedInventory);
+            setIsModalOpen(false);
+            setSelectedItem(null);
+            setSelectedSlot(null);
+        } catch (error) {
+            console.error('Error updating inventory:', error);
+        }
+    };
+
+
+    const handleDeleteItemClick = (item) => {
+        console.log(selectedItem);
+        setDeleteConfirmationModal(true);
+        setSelectedItem(item);
+        console.log(selectedItem);
+    }
+
+    // delete item from inventory
+    const handleDeleteItem = async () => {
+        console.log(`Selected Item ID: ${selectedItem.ItemID}`);
+        try {
+            // delete item from inventory on backend
+            await fetch(`/api/players/${id}/inventory/${selectedItem.ItemID}`, {
+                method: 'DELETE',
+            });
+            // update inventory state
+            const updatedInventory = await fetchPlayerInventory(id);
+            setInventory(updatedInventory);
+        } catch (error) {
+            console.error('Error deleting item from inventory:', error);
+        } finally {
+            // close the delete confirmation modal and unselect the item
+            setDeleteConfirmationModal(false);
+            setSelectedItem(null);
+        }
+    };
+
+    // handle stat change
     const handleStatChange = (statName, newValue) => {
         setPlayer(prevPlayer => ({
             ...prevPlayer,
@@ -128,12 +197,14 @@ const PlayerDetails = () => {
         setHasChanges(true);
     };
 
+    // change changes to player stats and notes
     const handleSaveChanges = async () => {
         try {
             const updatedData = {
                 ...player,
                 Notes: notes
             };
+            // update player details
             await updatePlayerDetails(id, updatedData);
             setHasChanges(false);
         } catch (err) {
@@ -141,59 +212,7 @@ const PlayerDetails = () => {
         }
     };
 
-    const handleAddItemClick = (index) => {
-        setSelectedSlot(index);
-        setIsModalOpen(true);
-    };
-
-    const handleFormSubmit = async (formData) => {
-        try {
-            const updatedInventory = [...inventory];
-            updatedInventory[selectedSlot] = formData;
-
-            // Optionally, send this to the backend to update the database
-            const response = await fetch(`/api/players/${id}/inventory`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ ...formData, PlayerID: id }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to add item to inventory');
-            }
-            const playerInventory = fillItemNames(await fetchPlayerInventory(id));
-            setInventory(playerInventory);
-            setIsModalOpen(false);
-            setSelectedSlot(null);
-        } catch (error) {
-            console.error('Error updating inventory:', error);
-        }
-    };
-
-    
-    const handleDeleteItem = async (index) => {
-        try {
-            const item = inventory[index];
-            if (item) {
-                const response = await fetch(`/api/players/${id}/inventory/${item.ItemID}`, {
-                    method: 'DELETE',
-                });
-    
-                if (!response.ok) {
-                    throw new Error('Failed to delete item from inventory');
-                }
-            }
-
-            const updatedInventory = [...inventory];
-            updatedInventory[index] = null;
-            setInventory(updatedInventory);
-        } catch (error) {
-            console.error('Error deleting item from inventory:', error);
-        }
-    };
-
+    // loading and error messages
     if (loading) return <div>Loading...</div>;
     if (error) return <div>{error}</div>;
     if (!player) return <div>Player not found</div>;
@@ -211,11 +230,11 @@ const PlayerDetails = () => {
 
                 <div className="player-details-left">
                     {/* Display player inventory */}
-                    <h2 className="text-xl font-semibold mb-2">Inventory</h2>
-                    <PlayerInventory 
-                        inventory={inventory} 
-                        onAddItemClick={handleAddItemClick}
-                        onDeleteItemClick={handleDeleteItem} 
+                    <PlayerInventory
+                        inventory={inventory}
+                        onAddItem={handleAddItem}
+                        onEditItem={handleEditItem}
+                        onDeleteItem={handleDeleteItemClick}
                     />
 
                     {/* Temporary display of equipped items */}
@@ -276,6 +295,7 @@ const PlayerDetails = () => {
                 </div>
             </div>
 
+            {/* Inventory form */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
                     <div className="bg-white p-6 rounded-lg relative">
@@ -283,16 +303,46 @@ const PlayerDetails = () => {
                             &times;
                         </button>
                         <InventoryForm
-                            inventory={selectedSlot !== null ? inventory[selectedSlot] : null}
+                            selectedItem={selectedItem}
                             onSubmit={handleFormSubmit}
                             onCancel={() => {
                                 setIsModalOpen(false);
                                 setSelectedSlot(null);
+                                setSelectedItem(null);
                             }}
                         />
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation for Inventory Item */}
+            {deleteConfirmationModal && (
+                <div id="popup-modal" tabIndex="-1" className="fixed inset-0 flex items-center justify-center z-50 overflow-auto bg-black bg-opacity-50">
+                    <div className="relative p-4 w-full max-w-md">
+                        <div className="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                            <button onClick={() => setDeleteConfirmationModal(false)} type="button" className="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                                <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                                </svg>
+                                <span className="sr-only">Close modal</span>
+                            </button>
+                            <div className="p-4 md:p-5 text-center">
+                                <svg className="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                                <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">Are you sure you want to delete this player?</h3>
+                                <button onClick={handleDeleteItem} type="button" className="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">
+                                    Yes, I'm sure
+                                </button>
+                                <button onClick={() => setDeleteConfirmationModal(false)} type="button" className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
+                                    No, cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };

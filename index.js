@@ -58,11 +58,79 @@ app.get('/api/npc', async (req, res) => {
   }
 });
 
+// // Get Player Inventory
+// app.get('/api/players/:id/inventory', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const [rows] = await pool.query('SELECT * FROM Inventory s, Item i WHERE s.PlayerID = ? and s.ItemID = i.ItemID', [id]);
+//     res.json(rows);
+//   } catch (err) {
+//     console.error('Error:', err);
+//     res.status(500).json({ error: 'An error occurred while trying to fetch player inventory.' });
+//   }
+// });
+
+// // Add item to player inventory
+// app.post('/api/players/:id/inventory', async (req, res) => {
+//   const { id } = req.params;
+//   const { ItemID, Quantity } = req.body;
+//   const maxRetries = 5; // Maximum number of retries for handling deadlock
+
+//   const executeQuery = async (attempt) => {
+//     try {
+//       // Check if the item exists in the inventory table
+//       const [rows] = await pool.query('SELECT * FROM Item WHERE ItemID = ?', [ItemID]);
+//       if (rows.length === 0) {
+//         return res.status(400).json({ error: 'Item does not exist' });
+//       }
+
+//       // Insert into Inventory table, or update quantity if it already exists
+//       await pool.query('INSERT INTO Inventory (PlayerID, ItemID, Quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE Quantity = Quantity + ?', [id, ItemID, Quantity, Quantity]);
+
+//       res.status(201).json({ message: 'Item added to inventory' });
+//     } catch (err) {
+//       if (err.code === 'ER_LOCK_DEADLOCK' && attempt < maxRetries) {
+//         console.warn(`Deadlock detected, retrying... Attempt ${attempt + 1}`);
+//         await new Promise(resolve => setTimeout(resolve, 50)); // Add a small delay before retrying
+//         return executeQuery(attempt + 1);
+//       }
+//       console.error('Error:', err);
+//       res.status(500).json({ error: 'An error occurred while adding item to inventory' });
+//     }
+//   };
+
+//   executeQuery(0);
+// });
+
+
+// // Get total quantity of items in inventory for a specific player
+// app.get('/api/players/:id/inventory/count', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const [rows] = await pool.query('SELECT IFNULL(SUM(Quantity), 0) AS totalQuantity FROM Inventory WHERE PlayerID = ?', [id]);
+//     const totalQuantity = rows[0].totalQuantity || 0;
+//     res.json({ totalQuantity });
+//   } catch (err) {
+//     console.error('Error:', err);
+//     res.status(500).json({ error: 'An error occurred while trying to count the inventory items.' });
+//   }
+// });
+
 // Get Player Inventory
 app.get('/api/players/:id/inventory', async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.query('SELECT * FROM Inventory s, Item i WHERE s.PlayerID = ? and s.ItemID = i.ItemID', [id]);
+    const [rows] = await pool.query(`
+      SELECT i.*, e.Durability, w.Attack, a.Defense, m.MaterialType, c.EffectType, c.EffectValue, c.Duration
+      FROM Inventory inv
+      JOIN Item i ON inv.ItemID = i.ItemID
+      LEFT JOIN Equipment e ON i.ItemID = e.ItemID
+      LEFT JOIN Weapon w ON i.ItemID = w.ItemID
+      LEFT JOIN Armour a ON i.ItemID = a.ItemID
+      LEFT JOIN Material m ON i.ItemID = m.ItemID
+      LEFT JOIN Consumable c ON i.ItemID = c.ItemID
+      WHERE inv.PlayerID = ?
+    `, [id]);
     res.json(rows);
   } catch (err) {
     console.error('Error:', err);
@@ -73,34 +141,105 @@ app.get('/api/players/:id/inventory', async (req, res) => {
 // Add item to player inventory
 app.post('/api/players/:id/inventory', async (req, res) => {
   const { id } = req.params;
-  const { ItemID, Quantity } = req.body;
-  const maxRetries = 5; // Maximum number of retries for handling deadlock
+  const { ItemName, ItemType, Rarity, Description, Quantity = 1, Durability, Attack, Defense, MaterialType, EffectType, EffectValue, Duration } = req.body;
+  const maxRetries = 5;
 
   const executeQuery = async (attempt) => {
+    const connection = await pool.getConnection();
     try {
-      // Check if the item exists in the inventory table
-      const [rows] = await pool.query('SELECT * FROM Item WHERE ItemID = ?', [ItemID]);
-      if (rows.length === 0) {
-        return res.status(400).json({ error: 'Item does not exist' });
+      await connection.beginTransaction();
+
+      // Insert into Item table
+      const [itemResult] = await connection.query('INSERT INTO Item (ItemName, ItemType, Rarity, Description) VALUES (?, ?, ?, ?)', [ItemName, ItemType, Rarity, Description]);
+      const itemId = itemResult.insertId;
+
+      // Insert into specific type table
+      switch (ItemType) {
+        case 'weapon':
+          await connection.query('INSERT INTO Equipment (ItemID, Durability) VALUES (?, ?)', [itemId, Durability]);
+          await connection.query('INSERT INTO Weapon (ItemID, Attack) VALUES (?, ?)', [itemId, Attack]);
+          break;
+        case 'armour':
+          await connection.query('INSERT INTO Equipment (ItemID, Durability) VALUES (?, ?)', [itemId, Durability]);
+          await connection.query('INSERT INTO Armour (ItemID, Defense) VALUES (?, ?)', [itemId, Defense]);
+          break;
+        case 'material':
+          await connection.query('INSERT INTO Material (ItemID, MaterialType) VALUES (?, ?)', [itemId, MaterialType]);
+          break;
+        case 'consumable':
+          await connection.query('INSERT INTO Consumable (ItemID, EffectType, EffectValue, Duration) VALUES (?, ?, ?, ?)', [itemId, EffectType, EffectValue, Duration]);
+          break;
       }
 
-      // Insert into Inventory table, or update quantity if it already exists
-      await pool.query('INSERT INTO Inventory (PlayerID, ItemID, Quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE Quantity = Quantity + ?', [id, ItemID, Quantity, Quantity]);
+      // Insert into Inventory table
+      await connection.query('INSERT INTO Inventory (PlayerID, ItemID, Quantity) VALUES (?, ?, ?)', [id, itemId, Quantity]);
 
-      res.status(201).json({ message: 'Item added to inventory' });
+      await connection.commit();
+      res.status(201).json({ message: 'Item added to inventory', itemId });
     } catch (err) {
+      await connection.rollback();
       if (err.code === 'ER_LOCK_DEADLOCK' && attempt < maxRetries) {
         console.warn(`Deadlock detected, retrying... Attempt ${attempt + 1}`);
-        await new Promise(resolve => setTimeout(resolve, 50)); // Add a small delay before retrying
+        await new Promise(resolve => setTimeout(resolve, 50));
         return executeQuery(attempt + 1);
       }
       console.error('Error:', err);
       res.status(500).json({ error: 'An error occurred while adding item to inventory' });
+    } finally {
+      connection.release();
     }
   };
 
   executeQuery(0);
 });
+
+// Delete item from player inventory
+app.delete('/api/players/:id/inventory/:itemId', async (req, res) => {
+  const { id, itemId } = req.params;
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Remove from Inventory
+    await connection.query('DELETE FROM Inventory WHERE PlayerID = ? AND ItemID = ?', [id, itemId]);
+
+    // Check if the item is still in anyone's inventory
+    const [inventoryCheck] = await connection.query('SELECT * FROM Inventory WHERE ItemID = ?', [itemId]);
+    
+    if (inventoryCheck.length === 0) {
+      // If not in any inventory, delete from all related tables
+      await connection.query('DELETE FROM Weapon WHERE ItemID = ?', [itemId]);
+      await connection.query('DELETE FROM Armour WHERE ItemID = ?', [itemId]);
+      await connection.query('DELETE FROM Equipment WHERE ItemID = ?', [itemId]);
+      await connection.query('DELETE FROM Material WHERE ItemID = ?', [itemId]);
+      await connection.query('DELETE FROM Consumable WHERE ItemID = ?', [itemId]);
+      await connection.query('DELETE FROM Item WHERE ItemID = ?', [itemId]);
+    }
+
+    await connection.commit();
+    res.status(204).end();
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while deleting item from inventory' });
+  } finally {
+    connection.release();
+  }
+});
+
+// Get inventory count
+app.get('/api/players/:id/inventory/count', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT SUM(Quantity) as totalQuantity FROM Inventory WHERE PlayerID = ?', [id]);
+    res.json({ totalQuantity: rows[0].totalQuantity || 0 });
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch inventory count.' });
+  }
+});
+
 
 
 // Delete item from player inventory
@@ -115,6 +254,55 @@ app.delete('/api/players/:id/inventory/:itemId', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while deleting item from inventory' });
   }
 });
+
+// Edit item in player inventory
+app.put('/api/players/:id/inventory/:itemId', async (req, res) => {
+  const { id, itemId } = req.params;
+  const { ItemName, ItemType, Rarity, Description, Quantity, Durability, Attack, Defense, MaterialType, EffectType, EffectValue, Duration } = req.body;
+  
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Update Item table
+    await connection.query('UPDATE Item SET ItemName = ?, ItemType = ?, Rarity = ?, Description = ? WHERE ItemID = ?', 
+      [ItemName, ItemType, Rarity, Description, itemId]);
+
+    // Update type-specific table
+    switch (ItemType) {
+      case 'weapon':
+        await connection.query('UPDATE Equipment SET Durability = ? WHERE ItemID = ?', [Durability, itemId]);
+        await connection.query('UPDATE Weapon SET Attack = ? WHERE ItemID = ?', [Attack, itemId]);
+        break;
+      case 'armour':
+        await connection.query('UPDATE Equipment SET Durability = ? WHERE ItemID = ?', [Durability, itemId]);
+        await connection.query('UPDATE Armour SET Defense = ? WHERE ItemID = ?', [Defense, itemId]);
+        break;
+      case 'material':
+        await connection.query('UPDATE Material SET MaterialType = ? WHERE ItemID = ?', [MaterialType, itemId]);
+        break;
+      case 'consumable':
+        await connection.query('UPDATE Consumable SET EffectType = ?, EffectValue = ?, Duration = ? WHERE ItemID = ?', 
+          [EffectType, EffectValue, Duration, itemId]);
+        break;
+    }
+
+    // Update Inventory table
+    if (Quantity !== undefined) {
+      await connection.query('UPDATE Inventory SET Quantity = ? WHERE PlayerID = ? AND ItemID = ?', [Quantity, id, itemId]);
+    }
+
+    await connection.commit();
+    res.status(200).json({ message: 'Item updated successfully' });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while updating the item' });
+  } finally {
+    connection.release();
+  }
+});
+
 
 // Add Player
 app.post('/api/players', async (req, res) => {
@@ -151,18 +339,7 @@ app.post('/api/players', async (req, res) => {
   }
 });
 
-// Get total quantity of items in inventory for a specific player
-app.get('/api/players/:id/inventory/count', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const [rows] = await pool.query('SELECT IFNULL(SUM(Quantity), 0) AS totalQuantity FROM Inventory WHERE PlayerID = ?', [id]);
-    const totalQuantity = rows[0].totalQuantity || 0;
-    res.json({ totalQuantity });
-  } catch (err) {
-    console.error('Error:', err);
-    res.status(500).json({ error: 'An error occurred while trying to count the inventory items.' });
-  }
-});
+
 
 // Get average gold for each class of players
 app.get('/api/players/average-gold-by-class', async (req, res) => {
