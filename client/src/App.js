@@ -16,6 +16,8 @@ import EventLogs from './components/routes/EventLog';
 import Locations from './components/routes/Locations';
 import Equipment from './components/routes/Equipment';
 import Inventory from './components/routes/Inventory';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
 
 const App = () => {
   const [campaigns, setCampaigns] = useState([]);
@@ -172,7 +174,7 @@ const App = () => {
           <Route path="/event-logs" element={<EventLogs entities={eventLogs} createEventLog={handleCreateEntity} editEventLog={handleEditEntity} deleteEventLog={handleDeleteEntity} />} />
           <Route path="/equipment" element={<Equipment entities={equipment} createEquipment={handleCreateEntity} editEquipment={handleEditEntity} deleteEquipment={handleDeleteEntity} />} />
           <Route path="/:route/:campaignNumber" element={<CampaignManagement campaigns={campaigns} />} />
-          <Route path="/campaigns/:campaignNumber" element={<CampaignManagement campaigns={campaigns} />} />
+          <Route path="/campaigns/:campaignNumber" element={<CampaignManagement />} />
           <Route path="/campaigns/:campaignNumber/character-creation" element={<CharacterCreation campaigns={campaigns} setCampaigns={setCampaigns} />} />
         </Routes>
       </div>

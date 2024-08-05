@@ -1,15 +1,61 @@
-// src/components/MainContent.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CampaignButton from './CampaignButton';
 import CampaignCreation from './CampaignCreation';
 import Modal from './Modal';
 
-const MainContent = ({ campaigns, onCreateCampaign }) => {
+const MainContent = () => {
+  const [campaigns, setCampaigns] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
-  const handleCreateCampaign = (newCampaign) => {
-    onCreateCampaign(newCampaign);
-    setShowModal(false);
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
+
+  const fetchCampaigns = async () => {
+    try {
+      const response = await fetch('/api/campaigns');
+      if (!response.ok) {
+        throw new Error('Failed to fetch campaigns');
+      }
+      const data = await response.json();
+      setCampaigns(data);
+    } catch (err) {
+      console.error('Error fetching campaigns:', err);
+    }
+  };
+
+  const handleCreateCampaign = async (newCampaign) => {
+    try {
+      const response = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newCampaign),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to add campaign');
+      }
+      const addedCampaign = await response.json();
+      setCampaigns([...campaigns, addedCampaign]);
+      setShowModal(false);
+    } catch (err) {
+      console.error('Error adding campaign:', err);
+    }
+  };
+
+  const handleDeleteCampaign = async (campaignId) => {
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete campaign');
+      }
+      setCampaigns(campaigns.filter(campaign => campaign.CampaignID !== campaignId));
+    } catch (err) {
+      console.error('Error deleting campaign:', err);
+    }
   };
 
   return (
@@ -28,8 +74,8 @@ const MainContent = ({ campaigns, onCreateCampaign }) => {
           <CampaignCreation onCreateCampaign={handleCreateCampaign} onClose={() => setShowModal(false)} />
         </Modal>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          {campaigns.map((campaign, index) => (
-            <CampaignButton key={index} campaignNumber={index + 1} />
+          {campaigns.map((campaign) => (
+            <CampaignButton key={campaign.CampaignID} campaign={campaign} onDelete={handleDeleteCampaign} />
           ))}
         </div>
       </div>

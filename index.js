@@ -24,6 +24,82 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// Get all Campaigns
+app.get('/api/campaigns', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM Campaign');
+    res.json(rows);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch campaigns.' });
+  }
+});
+
+// Add a new Campaign
+app.post('/api/campaigns', async (req, res) => {
+  const { Title, StartDate, EndDate } = req.body;
+
+  if (!Title || !StartDate || !EndDate) {
+    return res.status(400).json({ error: 'Title, StartDate, and EndDate are required' });
+  }
+
+  try {
+    const [result] = await pool.query('INSERT INTO Campaign (Title, StartDate, EndDate) VALUES (?, ?, ?)', [Title, StartDate, EndDate]);
+    const newCampaign = {
+      CampaignID: result.insertId,
+      Title,
+      StartDate,
+      EndDate
+    };
+    res.status(201).json(newCampaign);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to add the campaign.' });
+  }
+});
+
+
+// Get a specific Campaign by ID
+app.get('/api/campaigns/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.query('SELECT * FROM Campaign WHERE CampaignID = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch the campaign.' });
+  }
+});
+
+// Delete a Campaign by ID
+app.delete('/api/campaigns/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await pool.query('DELETE FROM Campaign WHERE CampaignID = ?', [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    // Get the maximum CampaignID value
+    const [rows] = await pool.query('SELECT MAX(CampaignID) AS maxId FROM Campaign');
+    const maxId = rows[0].maxId || 0;
+
+    // Reset AUTO_INCREMENT value
+    await pool.query(`ALTER TABLE Campaign AUTO_INCREMENT = ${maxId + 1}`);
+
+    res.status(204).end();
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to delete the campaign.' });
+  }
+});
+
+
+
+
 // Get Players
 app.get('/api/players', async (req, res) => {
   try {
