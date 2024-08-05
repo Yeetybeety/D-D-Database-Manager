@@ -154,15 +154,6 @@ const PlayerPage = () => {
         <DefaultButton onClick={() => setIsFormModalOpen(true)}> Add New Player</DefaultButton>
       </div>
 
-      <div className="mb-6">
-        <DefaultButton onClick={handleFindCollector}>Find Player Who Collected All Items</DefaultButton>
-        {collectionMessage && (
-          <div className="mt-4 text-xl font-bold text-gray-900 dark:text-white">
-            {collectionMessage}
-          </div>
-        )}
-      </div>
-
       <PlayerList
         players={players}
         onEdit={handleEditPlayer}
@@ -211,12 +202,26 @@ const PlayerPage = () => {
           </div>
         </div>
       )}
-      
+
+      <div className='flex flex-col'>
+        <h2 className='mb-4 mt-4 text-xl font-bold'>Player Statistics</h2>
+        <div className="mb-6">
+        <DefaultButton onClick={handleFindCollector}>Find Player Who Collected All Items</DefaultButton>
+        {collectionMessage && (
+          <div className="mt-4 text-xl font-bold text-gray-900 dark:text-white">
+            {collectionMessage}
+          </div>
+        )}
+      </div>
       <div className="mb-6">
         <DefaultButton onClick={() => setShowAverageGold(!showAverageGold)}>
           Calculate Average Gold
         </DefaultButton>
       </div>
+      </div>
+      
+
+
 
       {showAverageGold && (
         <Card additionalClasses='w-[360px] mt-10'>

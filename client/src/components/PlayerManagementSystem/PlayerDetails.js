@@ -10,6 +10,7 @@ import StatDisplay from '../generic/StatDisplay';
 import InventoryForm from './InventoryForm';
 import EquipmentPanel from './EquipmentPanel'
 import EquipmentSlot from './EquipmentSlot';
+import InventoryCountButton from './InventoryCountButton';
 
 // Fetches player details from server, including player stats
 const fetchPlayerDetails = async (playerId) => {
@@ -156,9 +157,9 @@ const PlayerDetails = () => {
                 console.log(equippedItemsData); // debug
 
                 // Filter out equipped items from inventory
-                const filteredInventory = playerInventory.filter(item => 
-                    item.ItemID !== data.WeaponID && 
-                    item.ItemID !== data.ArmourID && 
+                const filteredInventory = playerInventory.filter(item =>
+                    item.ItemID !== data.WeaponID &&
+                    item.ItemID !== data.ArmourID &&
                     item.ItemID !== data.ConsumableID
                 );
 
@@ -217,20 +218,20 @@ const PlayerDetails = () => {
     // for debugging purposes
     useEffect(() => {
         console.log('equippedItems changed:', equippedItems);
-      }, [equippedItems]);
-      
-      useEffect(() => {
+    }, [equippedItems]);
+
+    useEffect(() => {
         console.log('inventory changed:', inventory);
-      }, [inventory]);
-      
-      useEffect(() => {
+    }, [inventory]);
+
+    useEffect(() => {
         console.log('calculatedStats changed:', calculatedStats);
-      }, [calculatedStats]);
+    }, [calculatedStats]);
 
     // equip item to player; only affect UI
     const handleEquipItem = async (slotType, item) => {
         const newEquippedItems = { ...equippedItems, [slotType]: item };
-        
+
         // set equipped items and remove item from inventory
         setEquippedItems(newEquippedItems);
         setInventory(prev => prev.filter(invItem => invItem?.ItemID !== item.ItemID));
@@ -395,6 +396,12 @@ const PlayerDetails = () => {
                             onDeleteItem={handleDeleteItemClick}
                             moveItem={moveInventoryItem}
                         />
+
+                        {/* Display a count of player's inventory */}
+                        <div className="mb-4">
+                            <InventoryCountButton playerId={id} />
+                        </div>
+
                     </div>
 
                     <div className="player-details-right">

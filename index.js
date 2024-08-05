@@ -144,52 +144,7 @@ app.get('/api/npc', async (req, res) => {
   }
 });
 
-// // Get Player Inventory
-// app.get('/api/players/:id/inventory', async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const [rows] = await pool.query('SELECT * FROM Inventory s, Item i WHERE s.PlayerID = ? and s.ItemID = i.ItemID', [id]);
-//     res.json(rows);
-//   } catch (err) {
-//     console.error('Error:', err);
-//     res.status(500).json({ error: 'An error occurred while trying to fetch player inventory.' });
-//   }
-// });
-
-// // Add item to player inventory
-// app.post('/api/players/:id/inventory', async (req, res) => {
-//   const { id } = req.params;
-//   const { ItemID, Quantity } = req.body;
-//   const maxRetries = 5; // Maximum number of retries for handling deadlock
-
-//   const executeQuery = async (attempt) => {
-//     try {
-//       // Check if the item exists in the inventory table
-//       const [rows] = await pool.query('SELECT * FROM Item WHERE ItemID = ?', [ItemID]);
-//       if (rows.length === 0) {
-//         return res.status(400).json({ error: 'Item does not exist' });
-//       }
-
-//       // Insert into Inventory table, or update quantity if it already exists
-//       await pool.query('INSERT INTO Inventory (PlayerID, ItemID, Quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE Quantity = Quantity + ?', [id, ItemID, Quantity, Quantity]);
-
-//       res.status(201).json({ message: 'Item added to inventory' });
-//     } catch (err) {
-//       if (err.code === 'ER_LOCK_DEADLOCK' && attempt < maxRetries) {
-//         console.warn(`Deadlock detected, retrying... Attempt ${attempt + 1}`);
-//         await new Promise(resolve => setTimeout(resolve, 50)); // Add a small delay before retrying
-//         return executeQuery(attempt + 1);
-//       }
-//       console.error('Error:', err);
-//       res.status(500).json({ error: 'An error occurred while adding item to inventory' });
-//     }
-//   };
-
-//   executeQuery(0);
-// });
-
-
-// // Get total quantity of items in inventory for a specific player
+// // Get number of items in player's inventory for each item
 // app.get('/api/players/:id/inventory/count', async (req, res) => {
 //   try {
 //     const { id } = req.params;
@@ -201,6 +156,22 @@ app.get('/api/npc', async (req, res) => {
 //     res.status(500).json({ error: 'An error occurred while trying to count the inventory items.' });
 //   }
 // });
+
+// Get number of items in player's inventory for each item type
+app.get('/api/players/:id/inventory/count', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT I.ItemType, COUNT(*) as Count FROM Inventory Inv, Item I WHERE Inv.ItemID = I.ItemID AND Inv.PlayerID = ? GROUP BY I.ItemType;', [id]);
+    if (rows.length === 0) {
+      res.json({ message: 'Inventory is empty' });
+    } else {
+      res.json({ result: rows });
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to count the inventory items.' });
+  }
+});
 
 // Get Player Inventory
 app.get('/api/players/:id/inventory', async (req, res) => {
