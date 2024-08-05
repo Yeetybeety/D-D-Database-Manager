@@ -63,6 +63,7 @@ const EntityMainContent = ({ entity, entities, setEntities, onCreateEntity, fiel
 
     return (
         <main className="flex-grow p-4">
+            {entity != 'NPC2' ?
             <div className="p-4 bg-gray-100 rounded-lg shadow-md mb-4">
                 <h2 className="text-xl font-bold mb-2">Select Attributes</h2>
                 <div className="flex flex-wrap mb-4">
@@ -84,6 +85,8 @@ const EntityMainContent = ({ entity, entities, setEntities, onCreateEntity, fiel
                     Select
                 </button>
             </div>
+            :
+            <div></div>}
             <div className="container mx-auto">
                 <div className="bg-gray-100 p-6 rounded-lg shadow-lg mb-4">
                     <h2 className="text-xl font-bold mb-4">Manage {entity}</h2>
