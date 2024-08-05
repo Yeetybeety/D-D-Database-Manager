@@ -1,58 +1,66 @@
-// src/components/CampaignCreation.js
 import React, { useState } from 'react';
 
 const CampaignCreation = ({ onCreateCampaign, onClose }) => {
-  const [campaign, setCampaign] = useState({
-    name: '',
-    length: '',
-    participants: '',
-    difficulty: '',
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCampaign({
-      ...campaign,
-      [name]: value,
-    });
-  };
+  const [title, setTitle] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onCreateCampaign(campaign);
-    onClose();  // Close the modal after creating a campaign
+    if (!title || !startDate || !endDate) {
+      return;
+    }
+    onCreateCampaign({ Title: title, StartDate: startDate, EndDate: endDate });
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Create Campaign</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">Campaign Name</label>
-          <input type="text" id="name" name="name" value={campaign.name} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="length">Campaign Length</label>
-          <input type="text" id="length" name="length" value={campaign.length} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="participants">Participants</label>
-          <input type="text" id="participants" name="participants" value={campaign.participants} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="difficulty">Difficulty Level</label>
-          <select id="difficulty" name="difficulty" value={campaign.difficulty} onChange={handleChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            <option value="">Select Difficulty</option>
-            <option value="Easy">Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
-          </select>
-        </div>
-        <div className="flex items-center justify-between">
-          <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Create Campaign</button>
-        </div>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg">
+      <h2 className="text-xl font-bold mb-4">Create New Campaign</h2>
+      <div className="mb-4">
+        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
+          Title
+        </label>
+        <input
+          type="text"
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="startDate">
+          Start Date
+        </label>
+        <input
+          type="date"
+          id="startDate"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="endDate">
+          End Date
+        </label>
+        <input
+          type="date"
+          id="endDate"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        />
+      </div>
+      <div className="flex items-center justify-between">
+        <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300">
+          Create
+        </button>
+        <button type="button" onClick={onClose} className="bg-gray-500 text-white py-2 px-4 rounded-lg shadow-lg hover:bg-gray-700 transition duration-300">
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 };
 

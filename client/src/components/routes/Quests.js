@@ -3,10 +3,8 @@ import React, { useState, useEffect } from 'react';
 import EntityMainContent from '../EntityMainContent';
 
 
-const Quests = ({ entities, createQuest, deleteQuest, editQuest }) => {
-
-    const quests = entities
-    console.log(quests);
+const Quests = ({ entities, createQuest, deleteQuest, editQuest, fetchAttributes, setEntities }) => {
+    const quests = entities;
 
     const handleCreateQuest = (newQuest) => {
         return createQuest('quest', newQuest);
@@ -19,8 +17,7 @@ const Quests = ({ entities, createQuest, deleteQuest, editQuest }) => {
     const handleDeleteQuest = (questId) => {
         return deleteQuest('quest', questId);
     };
-
-    // Pass in fields so the 'Create' component knows which input fields to render
+    
     const fields = {
         'QuestID': null,
         'QuestName': null,
@@ -29,10 +26,9 @@ const Quests = ({ entities, createQuest, deleteQuest, editQuest }) => {
         'Progress': null,
     }
 
-    // Render EntityMainContent and whatever else is unique to your entity page
     return (
         <div>
-            <EntityMainContent entity="Quest" fields={fields} entities={quests} onCreateEntity={handleCreateQuest} onDeleteEntity={handleDeleteQuest} onEditEntity={handleEditQuest} />
+            <EntityMainContent entity="Quest" setEntities={setEntities} fetchAttributes={fetchAttributes} fields={fields} entities={quests} onCreateEntity={handleCreateQuest} onDeleteEntity={handleDeleteQuest} onEditEntity={handleEditQuest} />
         </div>
     );
 };

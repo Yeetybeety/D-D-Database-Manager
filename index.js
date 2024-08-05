@@ -24,6 +24,82 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// Get all Campaigns
+app.get('/api/campaigns', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM Campaign');
+    res.json(rows);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch campaigns.' });
+  }
+});
+
+// Add a new Campaign
+app.post('/api/campaigns', async (req, res) => {
+  const { Title, StartDate, EndDate } = req.body;
+
+  if (!Title || !StartDate || !EndDate) {
+    return res.status(400).json({ error: 'Title, StartDate, and EndDate are required' });
+  }
+
+  try {
+    const [result] = await pool.query('INSERT INTO Campaign (Title, StartDate, EndDate) VALUES (?, ?, ?)', [Title, StartDate, EndDate]);
+    const newCampaign = {
+      CampaignID: result.insertId,
+      Title,
+      StartDate,
+      EndDate
+    };
+    res.status(201).json(newCampaign);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to add the campaign.' });
+  }
+});
+
+
+// Get a specific Campaign by ID
+app.get('/api/campaigns/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.query('SELECT * FROM Campaign WHERE CampaignID = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch the campaign.' });
+  }
+});
+
+// Delete a Campaign by ID
+app.delete('/api/campaigns/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await pool.query('DELETE FROM Campaign WHERE CampaignID = ?', [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    // Get the maximum CampaignID value
+    const [rows] = await pool.query('SELECT MAX(CampaignID) AS maxId FROM Campaign');
+    const maxId = rows[0].maxId || 0;
+
+    // Reset AUTO_INCREMENT value
+    await pool.query(`ALTER TABLE Campaign AUTO_INCREMENT = ${maxId + 1}`);
+
+    res.status(204).end();
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to delete the campaign.' });
+  }
+});
+
+
+
+
 // Get Players
 app.get('/api/players', async (req, res) => {
   try {
@@ -38,7 +114,7 @@ app.get('/api/players', async (req, res) => {
 // Route to handle NPC filtering
 app.get('/api/npc', async (req, res) => {
   try {
-    const { filter } = req.query;
+    const { filter, fields } = req.query;
 
     // Basic validation to ensure filter is a string
     if (typeof filter !== 'string') {
@@ -46,11 +122,21 @@ app.get('/api/npc', async (req, res) => {
     }
 
     // Construct the query
-    const query = `SELECT * FROM NPC2 WHERE ${filter}`;
-    
+    let query = `SELECT ${fields} FROM NPC2 WHERE ${filter}`;
+
+    if (fields.length == 0 && filter.length == 0) {
+      query = `SELECT * FROM NPC2`;
+    } else if (fields.length == 0) {
+      query = `SELECT * FROM NPC2 WHERE ${filter}`;
+    } else if (filter.length == 0) {
+      query = `SELECT ${fields} FROM NPC2`;
+    }
+
+    console.log(query);
+
     // Execute the query
     const [rows] = await pool.query(query);
-    
+
     res.json(rows);
   } catch (err) {
     console.error('Error fetching NPCs:', err);
@@ -206,7 +292,7 @@ app.delete('/api/players/:id/inventory/:itemId', async (req, res) => {
 
     // Check if the item is still in anyone's inventory
     const [inventoryCheck] = await connection.query('SELECT * FROM Inventory WHERE ItemID = ?', [itemId]);
-    
+
     if (inventoryCheck.length === 0) {
       // If not in any inventory, delete from all related tables
       await connection.query('DELETE FROM Weapon WHERE ItemID = ?', [itemId]);
@@ -259,13 +345,13 @@ app.delete('/api/players/:id/inventory/:itemId', async (req, res) => {
 app.put('/api/players/:id/inventory/:itemId', async (req, res) => {
   const { id, itemId } = req.params;
   const { ItemName, ItemType, Rarity, Description, Quantity, Durability, Attack, Defense, MaterialType, EffectType, EffectValue, Duration } = req.body;
-  
+
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
     // Update Item table
-    await connection.query('UPDATE Item SET ItemName = ?, ItemType = ?, Rarity = ?, Description = ? WHERE ItemID = ?', 
+    await connection.query('UPDATE Item SET ItemName = ?, ItemType = ?, Rarity = ?, Description = ? WHERE ItemID = ?',
       [ItemName, ItemType, Rarity, Description, itemId]);
 
     // Update type-specific table
@@ -282,7 +368,7 @@ app.put('/api/players/:id/inventory/:itemId', async (req, res) => {
         await connection.query('UPDATE Material SET MaterialType = ? WHERE ItemID = ?', [MaterialType, itemId]);
         break;
       case 'consumable':
-        await connection.query('UPDATE Consumable SET EffectType = ?, EffectValue = ?, Duration = ? WHERE ItemID = ?', 
+        await connection.query('UPDATE Consumable SET EffectType = ?, EffectValue = ?, Duration = ? WHERE ItemID = ?',
           [EffectType, EffectValue, Duration, itemId]);
         break;
     }
@@ -429,7 +515,7 @@ app.put('/api/players/:id', async (req, res) => {
       WHERE PlayerID = ?
     `;
     await connection.query(updatePlayerQuery, [
-      Username, ClassType, Level, Exp, Health, MaxHealth, 
+      Username, ClassType, Level, Exp, Health, MaxHealth,
       Mana, MaxMana, Gold, playerId
     ]);
 
@@ -482,7 +568,7 @@ app.put('/api/players/:id/details', async (req, res) => {
     }
 
     await pool.query('COMMIT');
-    
+
     console.log(`Player details updated successfully for player ${playerId}`);
     res.json({ message: 'Player details updated successfully' });
   } catch (error) {
@@ -571,6 +657,84 @@ app.get('/api/items/:itemId', async (req, res) => {
   } catch (error) {
     console.error('Error fetching item details:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get players who have collected all items
+app.get('/api/location/most-populated', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT LocationName
+      FROM Location L, NPC2 N
+      WHERE L.LocationID = N.LocationID
+      GROUP BY L.LocationID
+      HAVING COUNT(*) = 
+        (SELECT MAX(maxPopulation) 
+        FROM (SELECT COUNT(*) as maxPopulation
+              FROM Location L, NPC2 N
+              WHERE L.LocationID = N.LocationID
+              GROUP BY L.LocationID) as MaxPop);
+    `);
+    if (rows.length === 0) {
+      res.json({ messageString: 'No one lives.' });
+    } else {
+      let messageString = ''
+      rows.forEach((lName, index) => {
+          messageString = messageString + ' ' + lName.LocationName + ',';
+      });
+      messageString = messageString.slice(0, -1) + ' -> these are all the most populated locations!'
+      res.json({ messageString });
+    }
+  } catch (err) {
+    console.error('Detailed Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to find the most populated Location.' });
+  }
+});
+
+// Get attributes
+app.get('/api/columns/:tableName', async (req, res) => {
+  const { tableName } = req.params;
+
+  try {
+    const [rows] = await pool.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = 'dnd' AND TABLE_NAME = ?
+    `, [tableName]);
+
+    // Extract column names from the result
+    const columnNames = rows.map(row => row.COLUMN_NAME);
+    res.json(columnNames);
+  } catch (err) {
+    console.error('Error fetching column names:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch column names.' });
+  }
+});
+
+// Projection function
+app.get('/api/project/:tableName', async (req, res) => {
+  const tableName = req.params.tableName;
+  const attributes = req.query.attributes;
+
+  if (!tableName || !attributes) {
+      return res.status(400).json({ error: 'Table name and attributes are required' });
+  }
+
+  const attributeArray = attributes.split(',');
+  const validAttributes = attributeArray.map(attr => attr.trim()).filter(attr => attr); // Remove any empty or invalid attributes
+
+  if (validAttributes.length === 0) {
+      return res.status(400).json({ error: 'No valid attributes provided' });
+  }
+
+  const query = `SELECT ${validAttributes.join(', ')} FROM ${tableName}`;
+
+  try {
+      const [rows] = await pool.query(query);
+      res.json(rows); 
+  } catch (error) {
+      console.error('Error executing query:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

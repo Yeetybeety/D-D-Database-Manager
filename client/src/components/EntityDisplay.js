@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import EntityEdit from './EditEntity';
 
-
 const EntityDisplay = ({ entity, entityData, fields, onDelete, onEdit }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -21,28 +20,35 @@ const EntityDisplay = ({ entity, entityData, fields, onDelete, onEdit }) => {
   return (
     <div className="p-3 bg-gray-100 rounded-lg shadow-md">
       <div>
-        {Object.entries(fields).map(([label, options]) => (
-          <div key={label} className="mb-2 flex">
-            <h3 className="text-l font-bold mb-1">{label}: </h3>
-            {Array.isArray(entityData[label]) ? (
-              <div>
-                {entityData[label].length > 0 ? (
-                  <ul>
-                    {entityData[label].map((item, index) => (
-                      <li key={item.id || index}>
-                        {item.name} - {item.class}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No {label.toLowerCase()} available</p>
-                )}
-              </div>
-            ) : (
-              <p>{entityData[label] || `No ${label.toLowerCase()}`}</p>
-            )}
-          </div>
-        ))}
+        {Object.entries(fields).map(([label, options]) => {
+          const value = entityData[label];
+          if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
+            return null; // Skip rendering if the value is empty
+          }
+
+          return (
+            <div key={label} className="mb-2 flex">
+              <h3 className="text-lg font-bold mb-1">{label}: </h3>
+              {Array.isArray(value) ? (
+                <div>
+                  {value.length > 0 ? (
+                    <ul>
+                      {value.map((item, index) => (
+                        <li key={item.id || index}>
+                          {item.name} - {item.class}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No {label.toLowerCase()} available</p>
+                  )}
+                </div>
+              ) : (
+                <p>{value || `No ${label.toLowerCase()}`}</p>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex justify-end mt-4">

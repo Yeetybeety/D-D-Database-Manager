@@ -1,7 +1,7 @@
 import React from 'react';
 import EntityMainContent from '../EntityMainContent';
 
-const Items = ({ entities, createItem, deleteItem, editItem }) => {
+const Items = ({ entities, createItem, deleteItem, editItem, setEntities, fetchAttributes }) => {
     const items = entities
 
     const handleCreateItem = (newItem) => {
@@ -34,6 +34,8 @@ const Items = ({ entities, createItem, deleteItem, editItem }) => {
                 onCreateEntity={handleCreateItem} 
                 onDeleteEntity={handleDeleteItem} 
                 onEditEntity={handleEditItem} 
+                setEntities={setEntities} 
+                fetchAttributes={fetchAttributes}
             />
         </div>
     );

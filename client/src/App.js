@@ -16,6 +16,8 @@ import EventLogs from './components/routes/EventLog';
 import Locations from './components/routes/Locations';
 import Equipment from './components/routes/Equipment';
 import Inventory from './components/routes/Inventory';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
 
 const App = () => {
   const [campaigns, setCampaigns] = useState([]);
@@ -37,6 +39,20 @@ const App = () => {
   const fetchEntities = async (endpoint) => {
     try {
       const response = await fetch(`/api/${endpoint}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      return data;
+      // Add more conditions here if you need to handle other endpoints
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  const fetchAttributes = async (table) => {
+    try {
+      const response = await fetch(`/api/columns/${table}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -165,14 +181,14 @@ const App = () => {
           <Route path="/player/edit/:id" element={<PlayerForm />} />
           <Route path="/inventory" element={<Inventory />} />
           {/* Change the route below to go to an edit page? */}
-          <Route path="/quest" element={<Quests entities={quests} createQuest={handleCreateEntity} editQuest={handleEditEntity} deleteQuest={handleDeleteEntity} />} />
-          <Route path="/location" element={<Locations entities={locations} createLocation={handleCreateEntity} editLocation={handleEditEntity} deleteLocation={handleDeleteEntity} />} />
-          <Route path="/item" element={<Items entities={items} createItem={handleCreateEntity} editItem={handleEditEntity} deleteItem={handleDeleteEntity} />} />
+          <Route path="/quest" element={<Quests entities={quests} setEntities={setQuests} fetchAttributes={fetchAttributes} createQuest={handleCreateEntity} editQuest={handleEditEntity} deleteQuest={handleDeleteEntity} />} />
+          <Route path="/location" element={<Locations entities={locations} setEntities={setLocations} fetchAttributes={fetchAttributes} createLocation={handleCreateEntity} editLocation={handleEditEntity} deleteLocation={handleDeleteEntity} />} />
+          <Route path="/item" element={<Items entities={items} setEntities={setItems} fetchAttributes={fetchAttributes} createItem={handleCreateEntity} editItem={handleEditEntity} deleteItem={handleDeleteEntity} />} />
           <Route path="/npc" element={<NPC entities={npcs} createNPC={handleCreateEntity} editNPC={handleEditEntity} deleteNPC={handleDeleteEntity} setNPCs={setNpcs} fetchNPC={updateEntityState} />} />
-          <Route path="/event-logs" element={<EventLogs entities={eventLogs} createEventLog={handleCreateEntity} editEventLog={handleEditEntity} deleteEventLog={handleDeleteEntity} />} />
+          <Route path="/event-logs" element={<EventLogs entities={eventLogs} setEntities={setEventLogs} fetchAttributes={fetchAttributes} createEventLog={handleCreateEntity} editEventLog={handleEditEntity} deleteEventLog={handleDeleteEntity} />} />
           <Route path="/equipment" element={<Equipment entities={equipment} createEquipment={handleCreateEntity} editEquipment={handleEditEntity} deleteEquipment={handleDeleteEntity} />} />
           <Route path="/:route/:campaignNumber" element={<CampaignManagement campaigns={campaigns} />} />
-          <Route path="/campaigns/:campaignNumber" element={<CampaignManagement campaigns={campaigns} />} />
+          <Route path="/campaigns/:campaignNumber" element={<CampaignManagement />} />
           <Route path="/campaigns/:campaignNumber/character-creation" element={<CharacterCreation campaigns={campaigns} setCampaigns={setCampaigns} />} />
         </Routes>
       </div>
