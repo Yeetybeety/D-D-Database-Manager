@@ -1,4 +1,3 @@
-// src/components/PlayerPage.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PlayerList from './PlayerList';
@@ -15,6 +14,7 @@ const PlayerPage = () => {
   const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, playerId: null });
   const [averageGoldByClass, setAverageGoldByClass] = useState([]);
   const [collectionMessage, setCollectionMessage] = useState('');
+  const [showAverageGold, setShowAverageGold] = useState(false);
 
   const navigate = useNavigate();
 
@@ -212,17 +212,24 @@ const PlayerPage = () => {
         </div>
       )}
       
-      <Card additionalClasses='w-[360px] mt-10'>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Average Gold by Class</h2>
-        <ul>
-          {averageGoldByClass.map(({ Class, averageGold }) => (
-            <li key={Class}>
-              {Class}: {Number(averageGold).toFixed(2)}
-            </li>
-          ))}
-        </ul>
-      </Card>
+      <div className="mb-6">
+        <DefaultButton onClick={() => setShowAverageGold(!showAverageGold)}>
+          Calculate Average Gold
+        </DefaultButton>
+      </div>
 
+      {showAverageGold && (
+        <Card additionalClasses='w-[360px] mt-10'>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Average Gold by Class</h2>
+          <ul>
+            {averageGoldByClass.map(({ Class, averageGold }) => (
+              <li key={Class}>
+                {Class}: {Number(averageGold).toFixed(2)}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </div>
   );
 };
