@@ -1,32 +1,44 @@
-import React, { useState } from 'react';
+import React from 'react';
 import EntityMainContent from '../EntityMainContent';
 
-const NPC = () => {
-    const [npcs, setNPCs] = useState([]);
+const NPC = ({ entities, createNPC, deleteNPC, editNPC }) => {
+    const npcs = entities;
 
     const handleCreateNPC = (newNPC) => {
-        setNPCs([...npcs, { ...newNPC }]);
+        createNPC('NPC2', newNPC);
+    };
+
+    const handleEditNPC = (updatedNPC) => {
+        editNPC('NPC2', updatedNPC);
+    };
+
+    const handleDeleteNPC = (npcId) => {
+        console.log(npcId);
+        deleteNPC('NPC2', npcId);
     };
 
     // Define fields for NPC with specific selection options
     const fields = {
-        'NPC Name': null,
+        'NPC2ID': null, // Primary key, generally not editable by users
+        'NPCName': null,
         'Description': null,
-        'Race': ['Goblin', 'Juggernaut', 'Dwarf', 'Elf'],
+        'Race': ['Goblin', 'Juggernaut', 'Dwarf', 'Elf'], // Dropdown selection options
         'Level': null,
         'Health': null,
-        'Max Health': null,
-        'AI Behaviour': ['Friendly', 'Hostile', 'Neutral', 'Harold'],
+        'AIBehaviour': ['Friendly', 'Hostile', 'Neutral', 'Harold'], // Dropdown selection options
+        'LocationID': null, // Typically a foreign key, may require a separate selection component or input
     };
 
-    // Render EntityMainContent and any additional components specific to NPCs
+
     return (
         <div>
-            <EntityMainContent 
-                entity="NPC" 
-                fields={fields} 
-                entities={npcs} 
-                onCreateEntity={handleCreateNPC} 
+            <EntityMainContent
+                entity="NPC2"
+                fields={fields}
+                entities={npcs}
+                onCreateEntity={handleCreateNPC}
+                onEditEntity={handleEditNPC}
+                onDeleteEntity={handleDeleteNPC}
             />
         </div>
     );

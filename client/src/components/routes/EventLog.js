@@ -1,27 +1,38 @@
-import React, { useState } from 'react';
+import React from 'react';
 import EntityMainContent from '../EntityMainContent';
 
-const EventLogs = () => {
-    const [eventLogs, setEventLogs] = useState([]);
+const EventLogs = ({ entities, createEventLog, deleteEventLog, editEventLog }) => {
+    const eventLogs = entities;
 
     const handleCreateEventLog = (newEventLog) => {
-        setEventLogs([...eventLogs, { ...newEventLog }]);
+        createEventLog('eventLog', newEventLog);
     };
 
+    const handleEditEventLog = (updatedEventLog) => {
+        editEventLog('eventLog', updatedEventLog);
+    };
+
+    const handleDeleteEventLog = (eventLogId) => {
+        deleteEventLog('eventLog', eventLogId);
+    };
+
+    // Pass in fields so the 'Create' component knows which input fields to render
     const fields = {
-        'Event ID': null,
+        'EventLogID': null,
         'Description': null,
-        'Player Action': null,
-        'Campaign ID': null,
+        'PlayerAction': null,
+        'CampaignID': null,
     };
 
     return (
         <div>
             <EntityMainContent 
-                entity="Event Log" 
+                entity="EventLog" 
                 fields={fields} 
                 entities={eventLogs} 
                 onCreateEntity={handleCreateEventLog} 
+                onDeleteEntity={handleDeleteEventLog} 
+                onEditEntity={handleEditEventLog} 
             />
         </div>
     );
