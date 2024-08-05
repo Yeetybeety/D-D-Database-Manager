@@ -1,36 +1,39 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { useDrag, useDrop } from 'react-dnd';
 import { PlusCircleIcon, XCircleIcon, SwordIcon, ShieldIcon, CubeIcon, BeakerIcon } from '../generic/Icons';
 import '../generic/styles.css';
 
-// const InventoryCard = ({ item, onAddItem, onDeleteItem }) => {
-//   return (
-//     <div className="inventory-card bg-gray-100 border border-gray-300 rounded p-2 flex items-center justify-center relative">
-//       {item ? (
-//         <>
-//           <div className="text-center">
-//             <div className="font-semibold">{item.Name}</div>
-//             <div className="text-xs text-gray-500">{item.Type}</div>
-//           </div>
-//           <button
-//             onClick={onDeleteItem}
-//             className="absolute top-1 right-1 text-red-500 hover:text-red-700"
-//           >
-//             <XCircleIcon className="h-5 w-5" />
-//           </button>
-//         </>
-//       ) : (
-//         <button
-//           onClick={onAddItem}
-//           className="text-blue-500 hover:text-blue-700"
-//         >
-//           <PlusCircleIcon className="h-8 w-8" />
-//         </button>
-//       )}
-//     </div>
-//   );
-// };
+const InventoryCard = ({ item, index, onAddItem, onEditItem, onDeleteItem, moveItem }) => {
+  const ref = useRef(null);
 
-const InventoryCard = ({ item, onAddItem, onEditItem, onDeleteItem }) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: 'inventoryItem',
+    item: () => ({ ...item, index }),
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  });
+
+  const [, drop] = useDrop({
+    accept: 'inventoryItem',
+    hover(draggedItem, monitor) {
+      if (!ref.current) {
+        return;
+      }
+      const dragIndex = draggedItem.index;
+      const hoverIndex = index;
+
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      moveItem(dragIndex, hoverIndex);
+      draggedItem.index = hoverIndex;
+    },
+  });
+
+  drag(drop(ref));
+
   const getIcon = (ItemType) => {
     switch (ItemType) {
       case 'weapon':
@@ -48,10 +51,12 @@ const InventoryCard = ({ item, onAddItem, onEditItem, onDeleteItem }) => {
 
   return (
     <div
+      ref={ref}
       className={`
         border border-gray-300 rounded p-2 flex flex-col items-center justify-center relative cursor-pointer
         transition-all duration-200 ease-in-out
         ${item ? 'bg-white' : 'bg-gray-100'}
+        ${isDragging ? 'opacity-50' : 'opacity-100'}
         hover:scale-[1.05]
       `}
       style={{ width: '100px', height: '100px' }}
@@ -77,6 +82,5 @@ const InventoryCard = ({ item, onAddItem, onEditItem, onDeleteItem }) => {
     </div>
   );
 };
-
 
 export default InventoryCard;

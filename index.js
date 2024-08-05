@@ -458,16 +458,14 @@ app.put('/api/players/:id/details', async (req, res) => {
   console.log('Received Edit Request:', req.body);
 
   const playerId = req.params.id;
-  const { Notes, stats } = req.body;
+  const { PlayerID, Notes, stats, EquippedWeapon, EquippedArmour, EquippedConsumable } = req.body;
 
   try {
     await pool.query('START TRANSACTION');
 
     // Update notes
-    if (Notes !== undefined) {
-      const notesQuery = 'UPDATE Player SET Notes = ? WHERE PlayerID = ?';
-      await pool.query(notesQuery, [Notes, playerId]);
-    }
+    const notesQuery = 'UPDATE Player SET Notes = ?, WeaponID = ?, ArmourID = ?, ConsumableID = ? WHERE PlayerID = ?';
+    await pool.query(notesQuery, [Notes, EquippedWeapon, EquippedArmour, EquippedConsumable, playerId]);
 
     // Update stats
     if (stats && Object.keys(stats).length > 0) {
@@ -513,11 +511,65 @@ app.get('/api/players/:id', async (req, res) => {
       player.stats[stat.StatName] = stat.StatValue;
     });
 
+    player.EquippedWeapon
+
     console.log('Player details:', player);
 
     res.json(player);
   } catch (error) {
     console.error('Error fetching player details:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get('/api/items/:itemId', async (req, res) => {
+  const itemId = req.params.itemId;
+
+  try {
+    // Query to fetch basic item details
+    const [itemRows] = await pool.query(`
+      SELECT i.*, 
+             e.Durability,
+             w.Attack,
+             a.Defense,
+             m.MaterialType,
+             c.EffectType,
+             c.EffectValue,
+             c.Duration
+      FROM Item i
+      LEFT JOIN Equipment e ON i.ItemID = e.ItemID
+      LEFT JOIN Weapon w ON i.ItemID = w.ItemID
+      LEFT JOIN Armour a ON i.ItemID = a.ItemID
+      LEFT JOIN Material m ON i.ItemID = m.ItemID
+      LEFT JOIN Consumable c ON i.ItemID = c.ItemID
+      WHERE i.ItemID = ?
+    `, [itemId]);
+
+    if (itemRows.length === 0) {
+      return res.status(404).json({ message: 'Item not found' });
+    }
+
+    const item = itemRows[0];
+
+    // Fetch additional stats for equipment
+    if (item.ItemType === 'weapon' || item.ItemType === 'armour') {
+      const [statRows] = await pool.query(`
+        SELECT StatName, StatValue
+        FROM EquipmentStat
+        WHERE ItemID = ?
+      `, [itemId]);
+
+      item.stats = {};
+      statRows.forEach(stat => {
+        item.stats[stat.StatName] = stat.StatValue;
+      });
+    }
+
+    console.log('Fetched item details:', item);
+
+    res.json(item);
+  } catch (error) {
+    console.error('Error fetching item details:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
