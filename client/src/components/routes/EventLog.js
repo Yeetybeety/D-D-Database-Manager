@@ -1,7 +1,7 @@
 import React from 'react';
 import EntityMainContent from '../EntityMainContent';
 
-const EventLogs = ({ entities, createEventLog, deleteEventLog, editEventLog }) => {
+const EventLogs = ({ entities, createEventLog, deleteEventLog, editEventLog, setEntities, fetchAttributes }) => {
     const eventLogs = entities;
 
     const handleCreateEventLog = (newEventLog) => {
@@ -33,6 +33,8 @@ const EventLogs = ({ entities, createEventLog, deleteEventLog, editEventLog }) =
                 onCreateEntity={handleCreateEventLog} 
                 onDeleteEntity={handleDeleteEventLog} 
                 onEditEntity={handleEditEventLog} 
+                setEntities={setEntities}
+                fetchAttributes={fetchAttributes}
             />
         </div>
     );

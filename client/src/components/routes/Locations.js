@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import EntityMainContent from '../EntityMainContent';
 import DefaultButton from '../generic/DefaultButton';
 
-const Locations = ({ entities, createLocation, deleteLocation, editLocation }) => {
+const Locations = ({ entities, setEntities, createLocation, deleteLocation, editLocation, fetchAttributes }) => {
     const [mostPopulated, setMostPopulated] = useState('');
 
     const locations = entities
@@ -62,6 +62,8 @@ const Locations = ({ entities, createLocation, deleteLocation, editLocation }) =
                 onCreateEntity={handleCreateLocation}
                 onDeleteEntity={handleDeleteLocation}
                 onEditEntity={handleEditLocation}
+                setEntities={setEntities} 
+                fetchAttributes={fetchAttributes}
             />
         </div>
     );

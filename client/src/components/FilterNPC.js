@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 
 const FilterComponent = ({ results, setResults, fetchNPC }) => {
     const [filters, setFilters] = useState([{ field: '', operator: '=', value: '' }]);
+    const [selectedAttributes, setSelectedAttributes] = useState({
+        NPCName: false,
+        Description: false,
+        Race: false,
+        Level: false,
+        Health: false,
+        AIBehaviour: false,
+        LocationID: false,
+    });
 
     const handleAddFilter = () => {
         setFilters([...filters, { field: '', operator: '=', value: '' }]);
@@ -19,13 +28,24 @@ const FilterComponent = ({ results, setResults, fetchNPC }) => {
         setFilters(newFilters);
     };
 
+    const handleAttributeChange = (attribute) => {
+        setSelectedAttributes(prev => ({
+            ...prev,
+            [attribute]: !prev[attribute],
+        }));
+    };
+
     const handleSubmit = async () => {
         const filterStrings = filters
             .filter(filter => filter.field && filter.value !== '')
             .map(filter => `${filter.field} ${filter.operator} '${filter.value}'`)
             .join(' AND ');
 
-        const response = await fetch(`/api/npc?filter=${encodeURIComponent(filterStrings)}`);
+        const selectedFields = Object.keys(selectedAttributes)
+            .filter(attr => selectedAttributes[attr])
+            .join(', ');
+
+        const response = await fetch(`/api/npc?filter=${encodeURIComponent(filterStrings)}&fields=${encodeURIComponent(selectedFields)}`);
         const data = await response.json();
         setResults(data);
     };
@@ -38,6 +58,22 @@ const FilterComponent = ({ results, setResults, fetchNPC }) => {
     return (
         <div className="bg-gray-100 p-4 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Filter NPCs</h2>
+            <div className="mb-4 flex">
+                <h3 className="text-lg font-semibold mx-2">Select Attributes to View:</h3>
+                {Object.keys(selectedAttributes).map(attribute => (
+                    <div key={attribute} className="mx-3">
+                        <label className="inline-flex items-center">
+                            <input
+                                type="checkbox"
+                                checked={selectedAttributes[attribute]}
+                                onChange={() => handleAttributeChange(attribute)}
+                                className="form-checkbox"
+                            />
+                            <span className="ml-2">{attribute}</span>
+                        </label>
+                    </div>
+                ))}
+            </div>
             {filters.map((filter, index) => (
                 <div key={index} className="mb-4 flex items-center space-x-2">
                     <input

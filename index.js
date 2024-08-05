@@ -114,7 +114,7 @@ app.get('/api/players', async (req, res) => {
 // Route to handle NPC filtering
 app.get('/api/npc', async (req, res) => {
   try {
-    const { filter } = req.query;
+    const { filter, fields } = req.query;
 
     // Basic validation to ensure filter is a string
     if (typeof filter !== 'string') {
@@ -122,7 +122,17 @@ app.get('/api/npc', async (req, res) => {
     }
 
     // Construct the query
-    const query = `SELECT * FROM NPC2 WHERE ${filter}`;
+    let query = `SELECT ${fields} FROM NPC2 WHERE ${filter}`;
+
+    if (fields.length == 0 && filter.length == 0) {
+      query = `SELECT * FROM NPC2`;
+    } else if (fields.length == 0) {
+      query = `SELECT * FROM NPC2 WHERE ${filter}`;
+    } else if (filter.length == 0) {
+      query = `SELECT ${fields} FROM NPC2`;
+    }
+
+    console.log(query);
 
     // Execute the query
     const [rows] = await pool.query(query);
@@ -613,22 +623,66 @@ app.get('/api/location/most-populated', async (req, res) => {
               WHERE L.LocationID = N.LocationID
               GROUP BY L.LocationID) as MaxPop);
     `);
-      console.log('working')
     if (rows.length === 0) {
       res.json({ messageString: 'No one lives.' });
     } else {
-      console.log(rows)
       let messageString = ''
       rows.forEach((lName, index) => {
           messageString = messageString + ' ' + lName.LocationName + ',';
       });
       messageString = messageString.slice(0, -1) + ' -> these are all the most populated locations!'
-      console.log(messageString)
       res.json({ messageString });
     }
   } catch (err) {
     console.error('Detailed Error:', err);
     res.status(500).json({ error: 'An error occurred while trying to find the most populated Location.' });
+  }
+});
+
+// Get attributes
+app.get('/api/columns/:tableName', async (req, res) => {
+  const { tableName } = req.params;
+
+  try {
+    const [rows] = await pool.query(`
+      SELECT COLUMN_NAME
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = 'dnd' AND TABLE_NAME = ?
+    `, [tableName]);
+
+    // Extract column names from the result
+    const columnNames = rows.map(row => row.COLUMN_NAME);
+    res.json(columnNames);
+  } catch (err) {
+    console.error('Error fetching column names:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch column names.' });
+  }
+});
+
+// Projection function
+app.get('/api/project/:tableName', async (req, res) => {
+  const tableName = req.params.tableName;
+  const attributes = req.query.attributes;
+
+  if (!tableName || !attributes) {
+      return res.status(400).json({ error: 'Table name and attributes are required' });
+  }
+
+  const attributeArray = attributes.split(',');
+  const validAttributes = attributeArray.map(attr => attr.trim()).filter(attr => attr); // Remove any empty or invalid attributes
+
+  if (validAttributes.length === 0) {
+      return res.status(400).json({ error: 'No valid attributes provided' });
+  }
+
+  const query = `SELECT ${validAttributes.join(', ')} FROM ${tableName}`;
+
+  try {
+      const [rows] = await pool.query(query);
+      res.json(rows); 
+  } catch (error) {
+      console.error('Error executing query:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
