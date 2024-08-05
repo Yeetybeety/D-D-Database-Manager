@@ -182,6 +182,38 @@ app.get('/api/players/average-gold-by-class', async (req, res) => {
   }
 });
 
+// Get players who have collected all items
+app.get('/api/players/collected-all-items', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT p.Username
+      FROM Player p
+      WHERE NOT EXISTS (
+        SELECT i.ItemID
+        FROM Item i
+        WHERE NOT EXISTS (
+          SELECT pi.ItemID
+          FROM Inventory pi
+          WHERE pi.PlayerID = p.PlayerID AND pi.ItemID = i.ItemID
+        )
+      )
+    `);
+
+    if (rows.length === 0) {
+      res.json({ message: 'No player has collected all items.' });
+    } else {
+      const usernames = rows.map(row => row.Username);
+      const message =
+        usernames.length === 1
+          ? `${usernames[0]} has collected them all!`
+          : `${usernames.join(', ')} have collected them all!`;
+      res.json({ message });
+    }
+  } catch (err) {
+    console.error('Detailed Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to find the players who collected all items.' });
+  }
+});
 
 
 

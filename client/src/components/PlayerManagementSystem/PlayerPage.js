@@ -13,6 +13,7 @@ const PlayerPage = () => {
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, playerId: null });
   const [averageGoldByClass, setAverageGoldByClass] = useState([]);
+  const [collectionMessage, setCollectionMessage] = useState('');
 
   const navigate = useNavigate();
 
@@ -128,6 +129,20 @@ const PlayerPage = () => {
     }
   };
 
+  const handleFindCollector = async () => {
+    try {
+      const response = await fetch('/api/players/collected-all-items');
+      if (!response.ok) {
+        throw new Error('Failed to fetch the players who collected all items');
+      }
+      const data = await response.json();
+      setCollectionMessage(data.message);
+    } catch (err) {
+      console.error('Frontend Error:', err);
+      setCollectionMessage('An error occurred while fetching the players who collected all items.');
+    }
+  };
+
   if (isLoading) return <div>Loading players...</div>;
   if (error) return <div>{error}</div>;
 
@@ -147,6 +162,15 @@ const PlayerPage = () => {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="mb-6">
+        <DefaultButton onClick={handleFindCollector}>Find Player Who Collected All Items</DefaultButton>
+        {collectionMessage && (
+          <div className="mt-4 text-xl font-bold text-gray-900 dark:text-white">
+            {collectionMessage}
+          </div>
+        )}
       </div>
 
       <PlayerList
