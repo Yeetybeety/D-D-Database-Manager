@@ -5,24 +5,22 @@ import PlayerList from './PlayerList';
 import PlayerForm from './PlayerForm';
 import DefaultButton from '../generic/DefaultButton';
 
-
 const PlayerPage = () => {
-  // State variables
   const [players, setPlayers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, playerId: null });
+  const [averageGoldByClass, setAverageGoldByClass] = useState([]);
 
   const navigate = useNavigate();
 
-  // fetch players when the component mount
   useEffect(() => {
     fetchPlayers();
+    fetchAverageGoldByClass();
   }, []);
 
-  // intial fetch from the server
   const fetchPlayers = async () => {
     try {
       setIsLoading(true);
@@ -40,10 +38,22 @@ const PlayerPage = () => {
     }
   };
 
-  // handle add player
+  const fetchAverageGoldByClass = async () => {
+    try {
+      const response = await fetch('/api/players/average-gold-by-class');
+      if (!response.ok) {
+        throw new Error('Failed to fetch average gold by class');
+      }
+      const data = await response.json();
+      console.log('Fetched Average Gold by Class:', data);
+      setAverageGoldByClass(data);
+    } catch (err) {
+      console.error('Error fetching average gold by class:', err);
+    }
+  };
+
   const handleAddPlayer = async (newPlayer) => {
     try {
-      // make post request to add player
       const response = await fetch('/api/players', {
         method: 'POST',
         headers: {
@@ -55,13 +65,10 @@ const PlayerPage = () => {
         throw new Error(`Failed to add player: ${response.status} ${response.statusText}`);
       }
 
-      // parse returned json object into a player object
       const addedPlayer = await response.json();
-
-      // update players state and close form modal
       setPlayers(prevPlayers => [...prevPlayers, addedPlayer]);
       setIsFormModalOpen(false);
-
+      fetchAverageGoldByClass(); // Update the average gold by class after adding a player
     } catch (err) {
       console.error('Error adding player:', err);
       // TODO: Implement user-facing error message
@@ -91,54 +98,57 @@ const PlayerPage = () => {
       setPlayers(prevPlayers => prevPlayers.map(p => p.PlayerID === updated.PlayerID ? updated : p));
       setIsFormModalOpen(false);
       setEditingPlayer(null);
+      fetchAverageGoldByClass(); // Update the average gold by class after updating a player
     } catch (err) {
       console.error('Error updating player:', err);
       // TODO: Implement user-facing error message
     }
   };
 
-  // set delete confirmation modal to open and set the player id
   const handleDeleteClick = (id) => {
     setDeleteConfirmation({ isOpen: true, playerId: id });
   };
 
-  // handle delete player
   const handleDeleteConfirm = async () => {
     const id = deleteConfirmation.playerId;
     try {
-      // make delete request to delete player
       const response = await fetch(`/api/players/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
         throw new Error('Failed to delete player');
       }
-      // remove player from players state
       setPlayers(prevPlayers => prevPlayers.filter(player => player.PlayerID !== id));
+      fetchAverageGoldByClass(); // Update the average gold by class after deleting a player
     } catch (err) {
       console.error('Error deleting player:', err);
       // TODO: Implement user-facing error message
     } finally {
-      // close delete confirmation modal
       setDeleteConfirmation({ isOpen: false, playerId: null });
     }
   };
 
-  // TODO: style this?
   if (isLoading) return <div>Loading players...</div>;
   if (error) return <div>{error}</div>;
 
-  // Render player page component
   return (
     <div className="container mx-auto px-4 py-8">
-
-      {/* Heading and Add Player Button */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Player Management</h1>
         <DefaultButton onClick={() => setIsFormModalOpen(true)}> Add New Player</DefaultButton>
       </div>
 
-      {/* Player list */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Average Gold by Class</h2>
+        <ul>
+          {averageGoldByClass.map(({ Class, averageGold }) => (
+            <li key={Class}>
+              {Class}: {Number(averageGold).toFixed(2)}
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <PlayerList
         players={players}
         onEdit={handleEditPlayer}
@@ -146,7 +156,6 @@ const PlayerPage = () => {
         setPlayers={setPlayers}
       />
 
-      {/* Player form modal */}
       {isFormModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg">
@@ -162,7 +171,6 @@ const PlayerPage = () => {
         </div>
       )}
 
-      {/* Delete confirmation modal */}
       {deleteConfirmation.isOpen && (
         <div id="popup-modal" tabIndex="-1" className="fixed inset-0 flex items-center justify-center z-50 overflow-auto bg-black bg-opacity-50">
           <div className="relative p-4 w-full max-w-md">
@@ -189,7 +197,6 @@ const PlayerPage = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

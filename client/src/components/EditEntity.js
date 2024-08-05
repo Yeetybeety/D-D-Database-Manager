@@ -38,7 +38,9 @@ const EntityEdit = ({ name, fields, onEditEntity, onClose, entityData }) => {
       <h2 className="text-2xl font-bold mb-4">Edit {name}</h2>
       <form onSubmit={handleSubmit}>
         {Object.entries(fields).map(([label, options], index) => {
-          if (label === 'Title') {
+          const idName = `${name}ID`;
+          console.log(idName);
+          if (label === idName) {
             // Render Title as a non-editable field
             return (
               <div key={index} className="mb-4">

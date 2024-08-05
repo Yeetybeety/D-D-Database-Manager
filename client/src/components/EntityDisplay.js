@@ -66,7 +66,7 @@ const EntityDisplay = ({ entity, entityData, fields, onDelete, onEdit }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
             <EntityEdit
-              name="Entity" // Adjust this if you need to display a specific name
+              name={entity}  // Adjust this if you need to display a specific name
               fields={fields}
               onEditEntity={handleEdit} // Use handleEdit to update the entity
               onClose={handleCloseModal}

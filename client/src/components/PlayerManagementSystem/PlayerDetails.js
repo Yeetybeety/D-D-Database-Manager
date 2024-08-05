@@ -172,6 +172,7 @@ const PlayerDetails = () => {
         }
     };
 
+    
     const handleDeleteItem = async (index) => {
         try {
             const item = inventory[index];

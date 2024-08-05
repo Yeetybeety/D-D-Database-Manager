@@ -44,3 +44,4 @@ const InventoryForm = ({ inventory, onSubmit, onCancel }) => {
 };
 
 export default InventoryForm;
+

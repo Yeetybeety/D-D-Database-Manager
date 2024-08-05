@@ -5,6 +5,8 @@ const app = express();
 const port = 3001;
 require('dotenv').config();
 
+const sqlstring = require('sqlstring');
+
 // app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // This line is crucial for parsing JSON request bodies
 
@@ -30,6 +32,29 @@ app.get('/api/players', async (req, res) => {
   } catch (err) {
     console.error('Error:', err);
     res.status(500).json({ error: 'An error occurred while trying to fetch players.' });
+  }
+});
+
+// Route to handle NPC filtering
+app.get('/api/npc', async (req, res) => {
+  try {
+    const { filter } = req.query;
+
+    // Basic validation to ensure filter is a string
+    if (typeof filter !== 'string') {
+      return res.status(400).json({ error: 'Invalid filter parameter' });
+    }
+
+    // Construct the query
+    const query = `SELECT * FROM NPC2 WHERE ${filter}`;
+    
+    // Execute the query
+    const [rows] = await pool.query(query);
+    
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching NPCs:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch NPCs.' });
   }
 });
 
@@ -125,6 +150,40 @@ app.post('/api/players', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while trying to add the player.' });
   }
 });
+
+// Get total quantity of items in inventory for a specific player
+app.get('/api/players/:id/inventory/count', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT IFNULL(SUM(Quantity), 0) AS totalQuantity FROM Inventory WHERE PlayerID = ?', [id]);
+    const totalQuantity = rows[0].totalQuantity || 0;
+    res.json({ totalQuantity });
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to count the inventory items.' });
+  }
+});
+
+// Get average gold for each class of players
+app.get('/api/players/average-gold-by-class', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT Class, AVG(Gold) as averageGold
+      FROM (
+        SELECT Class, Gold
+        FROM Player
+      ) AS PlayerGold
+      GROUP BY Class
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to fetch the average gold by class.' });
+  }
+});
+
+
+
 
 // Delete Player
 app.delete('/api/players/:id', async (req, res) => {
@@ -254,27 +313,30 @@ app.get('/api/players/:id', async (req, res) => {
   }
 });
 
-
 // Create an Entity
 const createEntity = async (tableName, req, res) => {
   const { ...data } = req.body;
   const columns = Object.keys(data).join(', ');
   const values = Object.values(data);
   const placeholders = values.map(() => '?').join(', ');
+
   const table = capitalizeFirstLetter(tableName);
   console.log("Inserting into table: ", table);
+
   const query = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
   try {
     const [result] = await pool.query(query, values);
     res.json({ ...data, ID: result.insertId });
   } catch (err) {
-    console.error(`Error inserting into ${table}:`, err);
-    res.status(500).send(`Error inserting into ${table}`);
+    const errorMessage = err.sqlMessage || `An error occurred while trying to insert into ${table}`;
+    res.status(500).json({ error: errorMessage });
   }
 };
+
 function capitalizeFirstLetter(str) {
   return str.replace(/^\w/, c => c.toUpperCase());
 }
+
 // Edit specific Entity from table
 const updateEntity = async (tableName, req, res) => {
   const id = req.params.id;
@@ -282,8 +344,10 @@ const updateEntity = async (tableName, req, res) => {
   const columns = Object.keys(data).map(key => `${key} = ?`).join(', ');
   const [firstValue] = Object.values(data);
   const values = [...Object.values(data), firstValue];
+
   const table = capitalizeFirstLetter(tableName);
   const columnName = `${table}ID`;
+
   const query = `UPDATE ${table} SET ${columns} WHERE ${columnName} = ?`;
   try {
     const [result] = await pool.query(query, values);
@@ -296,12 +360,14 @@ const updateEntity = async (tableName, req, res) => {
     res.status(500).send(`Error updating ${table}`);
   }
 };
+
 // Delete specific Entity from Table
 const deleteEntity = async (tableName, req, res) => {
   const id = req.params.id;
   console.log(id);
   const table = capitalizeFirstLetter(tableName);
   const columnName = `${table}ID`;
+
   const query = `DELETE FROM ${table} WHERE ${columnName} = ?`;
   try {
     const [result] = await pool.query(query, [id]);
@@ -315,6 +381,7 @@ const deleteEntity = async (tableName, req, res) => {
     res.status(500).send(`Error deleting from ${table}`);
   }
 };
+
 // Get all entities relating to that Table
 const getEntities = async (tableName, req, res) => {
   const table = capitalizeFirstLetter(tableName);
@@ -326,15 +393,19 @@ const getEntities = async (tableName, req, res) => {
     res.status(500).send(`Error fetching from ${table}`);
   }
 };
+
 app.post('/api/:entity', (req, res) => {
   createEntity(req.params.entity, req, res);
 });
+
 app.put('/api/:entity/:id', (req, res) => {
   updateEntity(req.params.entity, req, res);
 });
+
 app.delete('/api/:entity/:id', (req, res) => {
   deleteEntity(req.params.entity, req, res);
 });
+
 app.get('/api/:entity', (req, res) => {
   getEntities(req.params.entity, req, res);
 });
