@@ -47,10 +47,10 @@ app.get('/api/npc', async (req, res) => {
 
     // Construct the query
     const query = `SELECT * FROM NPC2 WHERE ${filter}`;
-    
+
     // Execute the query
     const [rows] = await pool.query(query);
-    
+
     res.json(rows);
   } catch (err) {
     console.error('Error fetching NPCs:', err);
@@ -206,7 +206,7 @@ app.delete('/api/players/:id/inventory/:itemId', async (req, res) => {
 
     // Check if the item is still in anyone's inventory
     const [inventoryCheck] = await connection.query('SELECT * FROM Inventory WHERE ItemID = ?', [itemId]);
-    
+
     if (inventoryCheck.length === 0) {
       // If not in any inventory, delete from all related tables
       await connection.query('DELETE FROM Weapon WHERE ItemID = ?', [itemId]);
@@ -259,13 +259,13 @@ app.delete('/api/players/:id/inventory/:itemId', async (req, res) => {
 app.put('/api/players/:id/inventory/:itemId', async (req, res) => {
   const { id, itemId } = req.params;
   const { ItemName, ItemType, Rarity, Description, Quantity, Durability, Attack, Defense, MaterialType, EffectType, EffectValue, Duration } = req.body;
-  
+
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
     // Update Item table
-    await connection.query('UPDATE Item SET ItemName = ?, ItemType = ?, Rarity = ?, Description = ? WHERE ItemID = ?', 
+    await connection.query('UPDATE Item SET ItemName = ?, ItemType = ?, Rarity = ?, Description = ? WHERE ItemID = ?',
       [ItemName, ItemType, Rarity, Description, itemId]);
 
     // Update type-specific table
@@ -282,7 +282,7 @@ app.put('/api/players/:id/inventory/:itemId', async (req, res) => {
         await connection.query('UPDATE Material SET MaterialType = ? WHERE ItemID = ?', [MaterialType, itemId]);
         break;
       case 'consumable':
-        await connection.query('UPDATE Consumable SET EffectType = ?, EffectValue = ?, Duration = ? WHERE ItemID = ?', 
+        await connection.query('UPDATE Consumable SET EffectType = ?, EffectValue = ?, Duration = ? WHERE ItemID = ?',
           [EffectType, EffectValue, Duration, itemId]);
         break;
     }
@@ -429,7 +429,7 @@ app.put('/api/players/:id', async (req, res) => {
       WHERE PlayerID = ?
     `;
     await connection.query(updatePlayerQuery, [
-      Username, ClassType, Level, Exp, Health, MaxHealth, 
+      Username, ClassType, Level, Exp, Health, MaxHealth,
       Mana, MaxMana, Gold, playerId
     ]);
 
@@ -484,7 +484,7 @@ app.put('/api/players/:id/details', async (req, res) => {
     }
 
     await pool.query('COMMIT');
-    
+
     console.log(`Player details updated successfully for player ${playerId}`);
     res.json({ message: 'Player details updated successfully' });
   } catch (error) {
@@ -519,6 +519,40 @@ app.get('/api/players/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching player details:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get players who have collected all items
+app.get('/api/location/most-populated', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT LocationName
+      FROM Location L, NPC2 N
+      WHERE L.LocationID = N.LocationID
+      GROUP BY L.LocationID
+      HAVING COUNT(*) = 
+        (SELECT MAX(maxPopulation) 
+        FROM (SELECT COUNT(*) as maxPopulation
+              FROM Location L, NPC2 N
+              WHERE L.LocationID = N.LocationID
+              GROUP BY L.LocationID) as MaxPop);
+    `);
+      console.log('working')
+    if (rows.length === 0) {
+      res.json({ messageString: 'No one lives.' });
+    } else {
+      console.log(rows)
+      let messageString = ''
+      rows.forEach((lName, index) => {
+          messageString = messageString + ' ' + lName.LocationName + ',';
+      });
+      messageString = messageString.slice(0, -1) + ' -> these are all the most populated locations!'
+      console.log(messageString)
+      res.json({ messageString });
+    }
+  } catch (err) {
+    console.error('Detailed Error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to find the most populated Location.' });
   }
 });
 

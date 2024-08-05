@@ -5,7 +5,7 @@ import EntityCreation from './CreateEntity';
 import Modal from './Modal';
 import EntityDisplay from './EntityDisplay';
 
-const EntityMainContent = ({ entity, entities = [], onCreateEntity, fields, onDeleteEntity, onEditEntity }) => {
+const   EntityMainContent = ({ entity, entities = [], onCreateEntity, fields, onDeleteEntity, onEditEntity }) => {
     const [showModal, setShowModal] = useState(false);
 
     const handleCreateEntity = (newEntity) => {
