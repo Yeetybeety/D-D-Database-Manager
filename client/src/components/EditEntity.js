@@ -21,16 +21,28 @@ const EntityEdit = ({ name, fields, onEditEntity, onClose, entityData }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // Set to null if empty for optional fields
+    const newValue = value === '' ? null : value;
     setFormState({
       ...formState,
-      [name]: value,
+      [name]: newValue,
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onEditEntity(formState);
-    onClose();  // Close the modal after editing the entity
+    
+    // Prepare form data for submission
+    const sanitizedFormState = Object.keys(formState).reduce((acc, key) => {
+      // Ensure empty strings are converted to null for number fields
+      acc[key] = formState[key] === '' ? null : formState[key];
+      return acc;
+    }, {});
+
+    console.log('Form Data to Submit:', sanitizedFormState); // Debugging: Check what is being submitted
+
+    onEditEntity(sanitizedFormState);
+    onClose();  // Close the modal after creating the entity
   };
 
   return (

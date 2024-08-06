@@ -144,19 +144,6 @@ app.get('/api/npc', async (req, res) => {
   }
 });
 
-// // Get number of items in player's inventory for each item
-// app.get('/api/players/:id/inventory/count', async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const [rows] = await pool.query('SELECT IFNULL(SUM(Quantity), 0) AS totalQuantity FROM Inventory WHERE PlayerID = ?', [id]);
-//     const totalQuantity = rows[0].totalQuantity || 0;
-//     res.json({ totalQuantity });
-//   } catch (err) {
-//     console.error('Error:', err);
-//     res.status(500).json({ error: 'An error occurred while trying to count the inventory items.' });
-//   }
-// });
-
 // Get number of items in player's inventory for each item type
 app.get('/api/players/:id/inventory/count', async (req, res) => {
   try {
@@ -631,9 +618,31 @@ app.get('/api/items/:itemId', async (req, res) => {
   }
 });
 
-// Get players who have collected all items
+// Route to get the list of tables
+app.get('/api/tables', async (req, res) => {
+  try {
+      // query fetches all table names from the db called 'dnd'
+      const result = await pool.query(`
+          SELECT table_name
+          FROM information_schema.tables
+          WHERE table_type='BASE TABLE'
+          AND table_schema = 'dnd'
+      `);
+      // returns a list of lists of jsons where the first list contains all the json's of table names
+      const tables = result[0].map(item => item.TABLE_NAME);
+      res.json(tables);
+  } catch (error) {
+      console.error('Failed to fetch tables:', error);
+      res.status(500).json({ error: 'Failed to fetch tables' });
+  }
+});
+
+
+// Get most-populated locations
 app.get('/api/location/most-populated', async (req, res) => {
   try {
+    // most populated is defined by location with the most npcs
+    // find the location where the count of npcs is = the max count
     const [rows] = await pool.query(`
       SELECT LocationName
       FROM Location L, NPC2 N
@@ -647,6 +656,7 @@ app.get('/api/location/most-populated', async (req, res) => {
               GROUP BY L.LocationID) as MaxPop);
     `);
     if (rows.length === 0) {
+      // if 
       res.json({ messageString: 'No one lives.' });
     } else {
       let messageString = ''
@@ -674,7 +684,7 @@ app.get('/api/columns/:tableName', async (req, res) => {
     `, [tableName]);
 
     // Extract column names from the result
-    const columnNames = rows.map(row => row.COLUMN_NAME);
+    const columnNames = rows?.map(row => row.COLUMN_NAME);
     res.json(columnNames);
   } catch (err) {
     console.error('Error fetching column names:', err);
