@@ -144,19 +144,6 @@ app.get('/api/npc', async (req, res) => {
   }
 });
 
-// // Get number of items in player's inventory for each item
-// app.get('/api/players/:id/inventory/count', async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const [rows] = await pool.query('SELECT IFNULL(SUM(Quantity), 0) AS totalQuantity FROM Inventory WHERE PlayerID = ?', [id]);
-//     const totalQuantity = rows[0].totalQuantity || 0;
-//     res.json({ totalQuantity });
-//   } catch (err) {
-//     console.error('Error:', err);
-//     res.status(500).json({ error: 'An error occurred while trying to count the inventory items.' });
-//   }
-// });
-
 // Get number of items in player's inventory for each item type
 app.get('/api/players/:id/inventory/count', async (req, res) => {
   try {
