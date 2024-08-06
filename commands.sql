@@ -1,5 +1,4 @@
 -- drop existing tables if they exist
-
 DROP TABLE IF EXISTS Consumable;
 DROP TABLE IF EXISTS Material;
 DROP TABLE IF EXISTS Armour;
@@ -207,15 +206,13 @@ VALUES
 
 INSERT INTO Item (ItemID, ItemName, ItemType, Rarity, Description) 
 VALUES 
-(1, 'Sword', 'Weapon', 'Common', 'A blunt wooden sword.'),
+(1, 'Wooden Sword', 'Weapon', 'Common', 'A blunt wooden sword.'),
 (2, 'Shield', 'Armor', 'Uncommon', 'A sturdy shield of steel.'),
 (3, 'Healing Potion', 'Consumable', 'Rare', 'A healing potion.'),
 (4, 'Elven Bow', 'Weapon', 'Epic', 'A longbow crafted from elven wood.'),
 (5, 'Dwarven Helmet', 'Armor', 'Legendary', 'A helmet forged from dwarven mithril.'),
 (6, 'Iron Sword', 'Weapon', 'Common', 'A basic iron sword.'),
 (7, 'Steel Axe', 'Weapon', 'Uncommon', 'A sturdy steel axe.'),
-(8, 'Mithril Dagger', 'Weapon', 'Rare', 'A lightweight mithril dagger.'),
-(9, 'Enchanted Staff', 'Weapon', 'Epic', 'A staff imbued with magical energy.'),
 (10, 'Leather Armor', 'Armor', 'Common', 'Basic leather armor.'),
 (11, 'Chainmail', 'Armor', 'Uncommon', 'Sturdy chainmail armor.'),
 (12, 'Plate Armor', 'Armor', 'Rare', 'Heavy plate armor.'),
@@ -226,7 +223,6 @@ VALUES
 (17, 'Smoke Bomb', 'Consumable', 'Uncommon', 'Creates a cloud of smoke.'),
 (18, 'Roasted Meat', 'Consumable', 'Common', 'Restores health.'),
 (19, 'Wood Log', 'Material', 'Common', 'A sturdy log of wood.'),
-(20, 'Gold Nugget', 'Material', 'Rare', 'A small nugget of pure gold.'),
 (21, 'Mithril Ore', 'Material', 'Epic', 'Raw mithril ore, extremely rare and valuable.'),
 (22, 'Leather Hide', 'Material', 'Common', 'Tanned leather hide from an animal.');
 
@@ -305,6 +301,24 @@ VALUES
 INSERT INTO Inventory (ItemID, PlayerID, Quantity) 
 VALUES 
 (1, 1, 2),
+(2, 1, 2),
+(3, 1, 2),
+(4, 1, 2),
+(5, 1, 2),
+(6, 1, 2),
+(7, 1, 2),
+(10, 1, 2),
+(11, 1, 2),
+(12, 1, 2),
+(13, 1, 2),
+(14, 1, 2),
+(15, 1, 2),
+(16, 1, 2),
+(17, 1, 2),
+(18, 1, 2),
+(19, 1, 2),
+(21, 1, 2),
+(22, 1, 2),
 (2, 2, 1),
 (3, 3, 5),
 (4, 4, 1),
@@ -318,8 +332,6 @@ VALUES
 (5, 50),
 (6, 70),
 (7, 75),
-(8, 85),
-(9, 90),
 (10, 55),
 (11, 65),
 (12, 95);
@@ -333,8 +345,6 @@ VALUES
 (5, 'INT', 15),
 (6, 'STR', 8),
 (7, 'STR', 12),
-(8, 'AGI', 15),
-(9, 'INT', 25),
 (10, 'DEF', 5),
 (11, 'DEF', 10),
 (12, 'DEF', 20);
@@ -344,9 +354,7 @@ VALUES
 (1, 15),
 (4, 25),
 (6, 20),
-(7, 30),
-(8, 22),
-(9, 35);
+(7, 30);
 
 INSERT INTO Armour (ItemID, Defense) 
 VALUES 
@@ -361,7 +369,6 @@ VALUES
 (13, 'Iron'),
 (14, 'Silver'),
 (19, 'Wood'),
-(20, 'Gold'),
 (21, 'Mithril'),
 (22, 'Leather');
 
