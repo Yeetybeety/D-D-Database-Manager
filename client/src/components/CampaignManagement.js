@@ -53,6 +53,9 @@ const CampaignManagement = () => {
         <Link to="/npc" className="bg-yellow-500 text-white py-2 px-4 rounded-lg shadow-lg hover:bg-yellow-700 transition duration-300 text-center">
           NPC Tracker
         </Link>
+        <Link to="/views" className="bg-orange-500 text-white py-2 px-4 rounded-lg shadow-lg hover:bg-orange-700 transition duration-300 text-center">
+          Projection of Tables
+        </Link>
         <Link to="/" className="bg-red-500 text-white py-2 px-4 rounded-lg shadow-lg hover:bg-red-700 transition duration-300 text-center">
           Back to Main Page
         </Link>

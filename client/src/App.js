@@ -17,6 +17,7 @@ import Locations from './components/routes/Locations';
 import Equipment from './components/routes/Equipment';
 import Inventory from './components/routes/Inventory';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import TableSelector from './components/Views';
 
 
 const App = () => {
@@ -180,6 +181,7 @@ const App = () => {
           <Route path="/players/:id" element={<PlayerDetails />} />
           <Route path="/player/edit/:id" element={<PlayerForm />} />
           <Route path="/inventory" element={<Inventory />} />
+          <Route path="/views" element={<TableSelector />} />
           {/* Change the route below to go to an edit page? */}
           <Route path="/quest" element={<Quests entities={quests} setEntities={setQuests} fetchAttributes={fetchAttributes} createQuest={handleCreateEntity} editQuest={handleEditEntity} deleteQuest={handleDeleteEntity} />} />
           <Route path="/location" element={<Locations entities={locations} setEntities={setLocations} fetchAttributes={fetchAttributes} createLocation={handleCreateEntity} editLocation={handleEditEntity} deleteLocation={handleDeleteEntity} />} />
